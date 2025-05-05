@@ -12,9 +12,9 @@ const StartPage = ({ navigation }) => {
                 style={tw`w-100 h-100 mb-4 `}
             />
 
-            <Text style={tw`text-3xl font-bold mb-4`}>Sign up to continue</Text>
+            <Text style={tw`text-2xl font-bold mb-4`}>Sign up to continue</Text>
             <Pressable
-    onPress={() => navigation.navigate("Login")}
+    onPress={() => navigation.navigate("RegisterPage")}
     style={({ pressed }) => [
         tw`p-4 rounded-full w-[70%] items-center border-2`,
         pressed ? tw`bg-violet-600 border-white` : tw`bg-[#77368e] border-transparent`,
