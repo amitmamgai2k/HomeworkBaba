@@ -6,12 +6,13 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import StartPage from "./pages/StartPage";
 import { StatusBar } from "expo-status-bar";
 import RegisterPage from "./pages/RegisterPage";
+import { AuthProvider } from "./context/UserContext";
 
 
 const Stack = createNativeStackNavigator();
 const App = () => {
 	return (
-		<>
+		<AuthProvider>
 			<StatusBar hidden={true} />
 			<NavigationContainer>
 				<SafeAreaView style={tw`flex-1`}>
@@ -36,7 +37,7 @@ const App = () => {
 
 				</SafeAreaView>
 			</NavigationContainer>
-		</>
+		</AuthProvider>
 	);
 };
 
