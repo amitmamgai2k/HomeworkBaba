@@ -7,6 +7,7 @@ import StartPage from "./pages/StartPage";
 import { StatusBar } from "expo-status-bar";
 import RegisterPage from "./pages/RegisterPage";
 import { AuthProvider } from "./context/UserContext";
+import UserHomePage from "./pages/UserHomePage";
 
 
 const Stack = createNativeStackNavigator();
@@ -27,6 +28,13 @@ const App = () => {
 								<Stack.Screen
 									name="RegisterPage"
 									component={RegisterPage}
+									options={{
+										headerShown: false,
+									}}
+								/>
+								<Stack.Screen
+									name="UserHomePage"
+									component={UserHomePage}
 									options={{
 										headerShown: false,
 									}}

@@ -70,6 +70,7 @@ export default function RegisterPage({navigation}) {
 
       await signInWithEmailAndPassword(auth, email, password);
       ToastAndroid.show('Signed in successfully!', ToastAndroid.SHORT);
+      navigation.navigate('UserHomePage');
 
 
       setError('');
@@ -98,13 +99,14 @@ export default function RegisterPage({navigation}) {
   if (loading) {
     return (
       <View style={tw`flex-1 justify-center items-center bg-gray-200`}>
+        <Text>Loading...</Text>
         <ActivityIndicator size="large" color="#8B5CF6" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-200`}>
+    <SafeAreaView style={tw`flex-1 bg-violet-100`}>
       <StatusBar/>
       <ScrollView contentContainerStyle={tw`flex-grow`}>
         <View style={tw`px-6 py-12 flex-1 justify-center`}>
