@@ -8,6 +8,7 @@ import { StatusBar } from "expo-status-bar";
 import RegisterPage from "./pages/RegisterPage";
 import { AuthProvider } from "./context/UserContext";
 import UserHomePage from "./pages/UserHomePage";
+import CreateAssignment from "./pages/CreateAssignment";
 
 
 const Stack = createNativeStackNavigator();
@@ -35,6 +36,13 @@ const App = () => {
 								<Stack.Screen
 									name="UserHomePage"
 									component={UserHomePage}
+									options={{
+										headerShown: false,
+									}}
+								/>
+								<Stack.Screen
+									name="CreateAssignment"
+									component={CreateAssignment}
 									options={{
 										headerShown: false,
 									}}
