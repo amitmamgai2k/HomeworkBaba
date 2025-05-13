@@ -18,7 +18,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../context/UserContext';
-
+import { updateProfile } from 'firebase/auth';
 
 const InputForm = ({ navigation }) => {
   const [showPicker, setShowPicker] = useState(false);
@@ -27,8 +27,6 @@ const InputForm = ({ navigation }) => {
     gender: '',
     schoolName: '',
     major: '',
-    classYear: '',
-    email: '',
     phone: '',
     dob: '',
     profileImage: '',
@@ -45,6 +43,9 @@ const InputForm = ({ navigation }) => {
   const handleTextChange = (field, value) => {
     setUserData({ ...userData, [field]: value });
   };
+  const { user } = useAuth();
+  console.log('user', user);
+
 
 
   const handlePickImage = async () => {
@@ -86,7 +87,12 @@ const InputForm = ({ navigation }) => {
   try {
 
     await AsyncStorage.setItem('USER_DATA', JSON.stringify(userData));
-    console.log('Document written with ID: ', docRef.id);
+    updateProfile(user, {
+      displayName: userData.name,
+      photoURL: userData.profileImage,
+      phoneNumber: userData.phone,
+    })
+
     navigation.navigate('UserHomePage');
   } catch (error) {
     console.error('Error saving data:', error);
@@ -214,39 +220,7 @@ const InputForm = ({ navigation }) => {
         </View>
 
         {/* Class Year */}
-        <View style={tw`mb-4`}>
-          <Text style={tw`text-sm font-medium mb-1 text-gray-600 px-3 pt-2`}>
-            Class Year
-          </Text>
-          <View style={tw`flex-row items-center border-1 bg-violet-100 rounded-xl px-3 pb-1`}>
-            <MaterialIcons name="date-range" size={20} color="#6b7280" style={tw`mr-2`} />
-            <TextInput
-              style={tw`flex-1 p-3 text-gray-800`}
-              placeholder="Enter your class year"
-              value={userData.classYear}
-              onChangeText={(text) => handleTextChange('classYear', text)}
-              keyboardType="numeric"
-            />
-          </View>
-        </View>
 
-        {/* Email */}
-        <View style={tw`mb-4 `}>
-          <Text style={tw`text-sm font-medium mb-1 text-gray-600 px-3 pt-2`}>
-            Email Address
-          </Text>
-          <View style={tw`flex-row items-center border-1 bg-violet-100 rounded-xl px-3 pb-1`}>
-            <MaterialIcons name="email" size={20} color="#6b7280" style={tw`mr-2`} />
-            <TextInput
-              style={tw`flex-1 p-3 text-gray-800`}
-              placeholder="Enter your email address"
-              value={userData.email}
-              onChangeText={(text) => handleTextChange('email', text)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-        </View>
 
         {/* Phone Number */}
         <View style={tw`mb-4 `}>

@@ -10,6 +10,7 @@ import { AuthProvider } from "./context/UserContext";
 import UserHomePage from "./pages/UserHomePage";
 import CreateAssignment from "./pages/CreateAssignment";
 import InputForm from "./pages/InputForm";
+import VerifyEmail from "./pages/VerifyEmail";
 
 
 const Stack = createNativeStackNavigator();
@@ -51,6 +52,13 @@ const App = () => {
 								<Stack.Screen
 									name="InputForm"
 									component={InputForm}
+									options={{
+										headerShown: false,
+									}}
+								/>
+								<Stack.Screen
+									name="VerifyEmail"
+									component={VerifyEmail}
 									options={{
 										headerShown: false,
 									}}

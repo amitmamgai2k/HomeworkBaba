@@ -6,7 +6,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendEmailVerification
 } from 'firebase/auth';
 import tw from '../tailwind';
 import start from '../assets/start.png';
@@ -33,31 +34,33 @@ export default function RegisterPage({navigation}) {
     return unsubscribe;
   }, []);
 
-  const handleSignUp = async () => {
+ const handleSignUp = async () => {
+  if (!email || !password) {
+    setError('Email and password are required');
+    ToastAndroid.show('Email and password are required', ToastAndroid.SHORT);
+    return;
+  }
 
-    if (!email || !password) {
-      setError('Email and password are required');
+  setLoading(true);
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(auth.currentUser);
 
-      ToastAndroid.show('Email and password are required', ToastAndroid.SHORT);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      ToastAndroid.show('Signed up successfully!', ToastAndroid.SHORT);
-      navigation.navigate('InputForm');
-      setError('');
-    } catch (error) {
-      console.log(error.message);
-      ToastAndroid.show(error.message, ToastAndroid.LONG);
-      setError(error.message);
+    ToastAndroid.show('Verify your email before continuing.', ToastAndroid.LONG);
 
 
-    } finally {
-      setLoading(false);
-    }
-  };
+    await AsyncStorage.setItem('user', JSON.stringify(auth.currentUser));
+    navigation.navigate('VerifyEmail');
+    setError('');
+
+  } catch (error) {
+    console.log(error.message);
+    ToastAndroid.show(error.message, ToastAndroid.LONG);
+    setError(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -73,8 +76,12 @@ export default function RegisterPage({navigation}) {
 
       await signInWithEmailAndPassword(auth, email, password);
       ToastAndroid.show('Signed in successfully!', ToastAndroid.SHORT);
-       console.log('User signed in:', auth.currentUser);
+
+       if(AsyncStorage.getItem('USER_DATA') === null){
       navigation.navigate('InputForm');
+       }else{
+        navigation.navigate('UserHomePage');
+       }
 
 
       setError('');

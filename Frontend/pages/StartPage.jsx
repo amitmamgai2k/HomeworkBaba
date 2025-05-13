@@ -2,8 +2,23 @@ import React from "react";
 import { View, Text,Image, Pressable } from "react-native";
 import tw from "../tailwind";
 import start from "../assets/start.png";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+
+
 
 const StartPage = ({ navigation }) => {
+    const handleStart = () => {
+        if(!AsyncStorage.getItem("user")) {
+        navigation.navigate("RegisterPage");
+       }
+        else if (!AsyncStorage.getItem("USER_DATA")){
+            navigation.navigate("InputForm");
+        }
+        else {
+            navigation.navigate("UserHomePage");
+        }
+    };
     return (
         <View style={tw`flex-1 items-center justify-center bg-violet-200`}>
             <Image
@@ -14,7 +29,7 @@ const StartPage = ({ navigation }) => {
 
             <Text style={tw`text-2xl font-bold mb-4`}>Sign up to continue</Text>
             <Pressable
-    onPress={() => navigation.navigate("RegisterPage")}
+    onPress={handleStart}
     style={({ pressed }) => [
         tw`p-4 rounded-full w-[70%] items-center border-2`,
         pressed ? tw`bg-violet-600 border-white` : tw`bg-[#77368e] border-transparent`,
