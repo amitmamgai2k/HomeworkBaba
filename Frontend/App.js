@@ -9,6 +9,7 @@ import RegisterPage from "./pages/RegisterPage";
 import { AuthProvider } from "./context/UserContext";
 import UserHomePage from "./pages/UserHomePage";
 import CreateAssignment from "./pages/CreateAssignment";
+import InputForm from "./pages/InputForm";
 
 
 const Stack = createNativeStackNavigator();
@@ -43,6 +44,13 @@ const App = () => {
 								<Stack.Screen
 									name="CreateAssignment"
 									component={CreateAssignment}
+									options={{
+										headerShown: false,
+									}}
+								/>
+								<Stack.Screen
+									name="InputForm"
+									component={InputForm}
 									options={{
 										headerShown: false,
 									}}

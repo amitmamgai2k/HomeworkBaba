@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ImageBackground, StatusBar, SafeAreaView, Image } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import tw from '../tailwind';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -7,10 +7,12 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
+
 const UserHomePage = ({ navigation }) => {
   const userName = 'Amit';
   const currentTime = new Date().getHours();
   let greeting = 'Good Morning';
+
 
   if (currentTime >= 12 && currentTime < 17) {
     greeting = 'Good Afternoon';

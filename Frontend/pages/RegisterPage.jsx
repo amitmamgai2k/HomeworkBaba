@@ -46,6 +46,7 @@ export default function RegisterPage({navigation}) {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       ToastAndroid.show('Signed up successfully!', ToastAndroid.SHORT);
+      navigation.navigate('InputForm');
       setError('');
     } catch (error) {
       console.log(error.message);
@@ -62,6 +63,8 @@ export default function RegisterPage({navigation}) {
     if (!email || !password) {
       setError('Email and password are required');
       ToastAndroid.show('Email and password are required', ToastAndroid.SHORT);
+
+
       return;
     }
 
@@ -70,12 +73,14 @@ export default function RegisterPage({navigation}) {
 
       await signInWithEmailAndPassword(auth, email, password);
       ToastAndroid.show('Signed in successfully!', ToastAndroid.SHORT);
-      navigation.navigate('UserHomePage');
+       console.log('User signed in:', auth.currentUser);
+      navigation.navigate('InputForm');
 
 
       setError('');
     } catch (error) {
       ToastAndroid.show(error.message, ToastAndroid.LONG);
+      console.log(error.message);
       setError(error.message);
     } finally {
       setLoading(false);
