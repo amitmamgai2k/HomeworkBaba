@@ -403,7 +403,7 @@ const [showAllDueAssignments, setShowAllDueAssignments] = useState(false);
           <Text style={tw`text-xs font-bold text-violet-700`}>Assignments</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={tw`flex-1 items-center justify-center py-2`}>
+        <TouchableOpacity style={tw`flex-1 items-center justify-center py-2`} onPress={() => navigation.navigate('UserProfile')}>
           <View style={tw`bg-violet-500 p-2 rounded-xl mb-1`}>
             <Entypo name="user" size={22} color="#fff" />
           </View>

@@ -11,6 +11,7 @@ import UserHomePage from "./pages/UserHomePage";
 import CreateAssignment from "./pages/CreateAssignment";
 import InputForm from "./pages/InputForm";
 import VerifyEmail from "./pages/VerifyEmail";
+import UserProfile from "./pages/UserProfile";
 
 
 const Stack = createNativeStackNavigator();
@@ -59,6 +60,13 @@ const App = () => {
 								<Stack.Screen
 									name="VerifyEmail"
 									component={VerifyEmail}
+									options={{
+										headerShown: false,
+									}}
+								/>
+								<Stack.Screen
+									name="UserProfile"
+									component={UserProfile}
 									options={{
 										headerShown: false,
 									}}
