@@ -9,15 +9,20 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const StartPage = ({ navigation }) => {
     const handleStart = () => {
-        if(!AsyncStorage.getItem("user")) {
-        navigation.navigate("RegisterPage");
-       }
-        else if (!AsyncStorage.getItem("USER_DATA")){
-            navigation.navigate("InputForm");
-        }
-        else {
-            navigation.navigate("UserHomePage");
-        }
+    //     console.log('User Data', AsyncStorage.getItem("USER_DATA"));
+    //     console.log('User', AsyncStorage.getItem("user"));
+
+    //     if(!AsyncStorage.getItem("user")) {
+    //     navigation.navigate("RegisterPage");
+    //    }
+    //     else if (!AsyncStorage.getItem("USER_DATA")){
+    //         navigation.navigate("InputForm");
+    //     }
+    //     else {
+    //         navigation.navigate("UserHomePage");
+    //     }
+          navigation.navigate("RegisterPage");
+
     };
     return (
         <View style={tw`flex-1 items-center justify-center bg-violet-200`}>

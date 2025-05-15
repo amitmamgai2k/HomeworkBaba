@@ -14,6 +14,7 @@ const UserHomePage = ({ navigation }) => {
   let greeting = 'Good Morning';
 
 
+
   if (currentTime >= 12 && currentTime < 17) {
     greeting = 'Good Afternoon';
   } else if (currentTime >= 17) {
