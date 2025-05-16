@@ -12,11 +12,14 @@ import CreateAssignment from "./pages/CreateAssignment";
 import InputForm from "./pages/InputForm";
 import VerifyEmail from "./pages/VerifyEmail";
 import UserProfile from "./pages/UserProfile";
+import { store } from "./Redux/store";
+import { Provider } from "react-redux";
 
 
 const Stack = createNativeStackNavigator();
 const App = () => {
 	return (
+		<Provider store={store}>
 		<AuthProvider>
 			<StatusBar hidden={true} />
 			<NavigationContainer>
@@ -78,6 +81,7 @@ const App = () => {
 				</SafeAreaView>
 			</NavigationContainer>
 		</AuthProvider>
+		</Provider>
 	);
 };
 
