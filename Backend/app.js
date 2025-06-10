@@ -1,12 +1,8 @@
 // app.js
 import express from 'express';
 import dotenv from 'dotenv';
-
+import userRoutes from './src/routes/user.routes.js';
 import connectToDB from './src/db/db.js';
-
-
-
-
 
 dotenv.config();
 const app = express();
@@ -22,6 +18,8 @@ app.get('/', (req, res) => {
   console.log('Request Received');
   res.send('Hello world');
 });
+app.use('/users', userRoutes);
+
 
 
 

@@ -19,9 +19,13 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../context/UserContext';
 import { updateProfile } from 'firebase/auth';
+import { registerUser } from '../Redux/Slices/userSlice';
+import { useDispatch } from 'react-redux';
 
 const InputForm = ({ navigation }) => {
   const [showPicker, setShowPicker] = useState(false);
+  const dispatch = useDispatch();
+    const { user } = useAuth();
   const [userData, setUserData] = useState({
     name: '',
     gender: '',
@@ -43,7 +47,7 @@ const InputForm = ({ navigation }) => {
   const handleTextChange = (field, value) => {
     setUserData({ ...userData, [field]: value });
   };
-  const { user } = useAuth();
+
   console.log('user', user);
 
 
@@ -87,6 +91,10 @@ const InputForm = ({ navigation }) => {
   try {
 
     await AsyncStorage.setItem('USER_DATA', JSON.stringify(userData));
+    dispatch(registerUser(userData));
+    console.log('Dispatching user data:', userData);
+    Alert.alert('Success', 'Your profile has been updated successfully!');
+
     updateProfile(user, {
       displayName: userData.name,
       photoURL: userData.profileImage,
