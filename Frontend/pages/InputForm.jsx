@@ -23,9 +23,57 @@ import { registerUser } from '../Redux/Slices/userSlice';
 import { useDispatch } from 'react-redux';
 
 const InputForm = ({ navigation }) => {
-  const [showPicker, setShowPicker] = useState(false);
-  const dispatch = useDispatch();
-    const { user } = useAuth();
+  console.log('🔍 DEBUG: InputForm component started');
+
+  // Test each hook individually
+  let showPicker, setShowPicker, dispatch, user;
+
+  try {
+    console.log('🔍 DEBUG: Testing useState...');
+    [showPicker, setShowPicker] = useState(false);
+    console.log('✅ DEBUG: useState successful');
+  } catch (error) {
+    console.error('❌ DEBUG: useState failed:', error);
+    return (
+      <SafeAreaView style={tw`flex-1 bg-red-100 justify-center items-center`}>
+        <Text style={tw`text-red-600 text-center p-4`}>
+          useState Hook Error: {error.message}
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
+  try {
+    console.log('🔍 DEBUG: Testing useDispatch...');
+    dispatch = useDispatch();
+    console.log('✅ DEBUG: useDispatch successful');
+  } catch (error) {
+    console.error('❌ DEBUG: useDispatch failed:', error);
+    return (
+      <SafeAreaView style={tw`flex-1 bg-red-100 justify-center items-center`}>
+        <Text style={tw`text-red-600 text-center p-4`}>
+          useDispatch Hook Error: {error.message}
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
+  try {
+    console.log('🔍 DEBUG: Testing useAuth...');
+    const authResult = useAuth();
+    console.log('✅ DEBUG: useAuth successful', authResult);
+    user = authResult?.user;
+  } catch (error) {
+    console.error('❌ DEBUG: useAuth failed:', error);
+    return (
+      <SafeAreaView style={tw`flex-1 bg-red-100 justify-center items-center`}>
+        <Text style={tw`text-red-600 text-center p-4`}>
+          useAuth Hook Error: {error.message}
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   const [userData, setUserData] = useState({
     name: '',
     gender: '',
@@ -35,6 +83,8 @@ const InputForm = ({ navigation }) => {
     dob: '',
     profileImage: '',
   });
+
+  console.log('🔍 DEBUG: All hooks successful, user:', user);
 
   const isFormValid = (userId) => {
     return (
@@ -48,13 +98,8 @@ const InputForm = ({ navigation }) => {
     setUserData({ ...userData, [field]: value });
   };
 
-  console.log('user', user);
-
-
-
   const handlePickImage = async () => {
     try {
-      // Request permissions first
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
@@ -81,35 +126,30 @@ const InputForm = ({ navigation }) => {
   const handleSubmit = async () => {
     console.log('userData', userData);
 
-  if (!isFormValid()) {
-    Alert.alert('Form Incomplete', 'Please fill all required fields.');
-    return;
-  }
+    if (!isFormValid()) {
+      Alert.alert('Form Incomplete', 'Please fill all required fields.');
+      return;
+    }
 
+    try {
+      await AsyncStorage.setItem('USER_DATA', JSON.stringify(userData));
+      dispatch(registerUser(userData));
+      console.log('Dispatching user data:', userData);
+      Alert.alert('Success', 'Your profile has been updated successfully!');
 
+      updateProfile(user, {
+        displayName: userData.name,
+        photoURL: userData.profileImage,
+        phoneNumber: userData.phone,
+      });
 
-  try {
+      navigation.navigate('UserHomePage');
+    } catch (error) {
+      console.error('Error saving data:', error);
+      Alert.alert('Storage Error', 'Could not save your data. Please try again.');
+    }
+  };
 
-    await AsyncStorage.setItem('USER_DATA', JSON.stringify(userData));
-    dispatch(registerUser(userData));
-    console.log('Dispatching user data:', userData);
-    Alert.alert('Success', 'Your profile has been updated successfully!');
-
-    updateProfile(user, {
-      displayName: userData.name,
-      photoURL: userData.profileImage,
-      phoneNumber: userData.phone,
-    })
-
-    navigation.navigate('UserHomePage');
-  } catch (error) {
-    console.error('Error saving data:', error);
-    Alert.alert('Storage Error', 'Could not save your data. Please try again.');
-  }
-};
-
-
-  // Parse date string to Date object for the picker
   const getDateObject = () => {
     if (userData.dob) {
       try {
@@ -123,6 +163,11 @@ const InputForm = ({ navigation }) => {
 
   return (
     <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+      <View style={tw`p-4 bg-green-100 mb-4`}>
+        <Text style={tw`text-green-800 font-bold`}>🎉 DEBUG: All hooks loaded successfully!</Text>
+        <Text style={tw`text-green-700`}>User: {user ? 'Logged In' : 'Not Logged In'}</Text>
+      </View>
+
       <ScrollView
         style={tw`flex-1`}
         contentContainerStyle={tw`px-6 mt-2`}
@@ -158,11 +203,11 @@ const InputForm = ({ navigation }) => {
         </View>
 
         {/* Name - Required Field */}
-        <View style={tw`mb-4  `}>
+        <View style={tw`mb-4`}>
           <Text style={tw`text-sm font-medium mb-1 text-gray-600 px-3 pt-2`}>
             Full Name <Text style={tw`text-red-500`}>*</Text>
           </Text>
-          <View style={tw`flex-row items-center border-1 bg-violet-100 rounded-xl  px-3 pb-1`}>
+          <View style={tw`flex-row items-center border-1 bg-violet-100 rounded-xl px-3 pb-1`}>
             <Icon name="person-outline" size={20} color="#6b7280" style={tw`mr-2`} />
             <TextInput
               style={tw`flex-1 p-3 text-gray-800`}
@@ -174,13 +219,13 @@ const InputForm = ({ navigation }) => {
         </View>
 
         {/* Gender - Required Field */}
-        <View style={tw`mb-4 `}>
+        <View style={tw`mb-4`}>
           <Text style={tw`text-sm font-medium mb-1 text-gray-600 px-3 pt-2`}>
             Gender <Text style={tw`text-red-500`}>*</Text>
           </Text>
-          <View style={tw`flex-row items-center px-3 border-1 bg-violet-100 rounded-xl `}>
+          <View style={tw`flex-row items-center px-3 border-1 bg-violet-100 rounded-xl`}>
             <FontAwesome name="venus-mars" size={20} color="#6b7280" style={tw`mr-2`} />
-            <View style={tw`flex-1   `}>
+            <View style={tw`flex-1`}>
               <Picker
                 selectedValue={userData.gender}
                 onValueChange={(value) => handleTextChange('gender', value)}
@@ -200,7 +245,7 @@ const InputForm = ({ navigation }) => {
           <Text style={tw`text-sm font-medium mb-1 text-gray-600 px-3 pt-2`}>
             School/College/University <Text style={tw`text-red-500`}>*</Text>
           </Text>
-          <View style={tw`flex-row items-center border-1 bg-violet-100 rounded-xl  px-3 pb-1`}>
+          <View style={tw`flex-row items-center border-1 bg-violet-100 rounded-xl px-3 pb-1`}>
             <Icon name="school-outline" size={20} color="#6b7280" style={tw`mr-2`} />
             <TextInput
               style={tw`flex-1 p-3 text-gray-800`}
@@ -212,7 +257,7 @@ const InputForm = ({ navigation }) => {
         </View>
 
         {/* Major/Stream */}
-        <View style={tw`mb-4 `}>
+        <View style={tw`mb-4`}>
           <Text style={tw`text-sm font-medium mb-1 text-gray-600 px-3 pt-2`}>
             Major/Stream
           </Text>
@@ -227,11 +272,8 @@ const InputForm = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Class Year */}
-
-
         {/* Phone Number */}
-        <View style={tw`mb-4 `}>
+        <View style={tw`mb-4`}>
           <Text style={tw`text-sm font-medium mb-1 text-gray-600 px-3 pt-2`}>
             Phone Number
           </Text>
@@ -279,7 +321,7 @@ const InputForm = ({ navigation }) => {
         </View>
 
         <View style={tw`bg-violet-50 p-4 rounded-xl mb-8 flex-row`}>
-          <Icon name="information-circle-outline" size={24} color="#a23cf1 " style={tw`mr-2`} />
+          <Icon name="information-circle-outline" size={24} color="#a23cf1" style={tw`mr-2`} />
           <View style={tw`flex-1`}>
             <Text style={tw`text-violet-800 font-medium mb-1 text-base`}>
               Why we need this information
