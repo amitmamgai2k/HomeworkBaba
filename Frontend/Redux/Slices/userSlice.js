@@ -13,23 +13,29 @@ export const registerUser = createAsyncThunk(
     try {
       console.log("Registering user with data:", userData);
 
-      // Make sure axiosInstance is properly configured
-      const response = await axiosInstance.post("/users/register", userData);
+
+      const currentUser = auth().currentUser;
+      const idToken = await currentUser.getIdToken();
+
+
+      const response = await axiosInstance.post("/users/register", userData, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       console.log("Registration response:", response.data);
       return response.data;
+
     } catch (error) {
       console.error("Error registering user:", error);
 
-      // Handle different error scenarios
       if (error.response) {
-        // Server responded with error status
         return rejectWithValue(error.response.data);
       } else if (error.request) {
-        // Request was made but no response received
         return rejectWithValue({ message: "Network error - no response from server" });
       } else {
-        // Something else happened
         return rejectWithValue({ message: error.message });
       }
     }

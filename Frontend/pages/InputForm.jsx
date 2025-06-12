@@ -23,58 +23,16 @@ import { registerUser } from '../Redux/Slices/userSlice';
 import { useDispatch } from 'react-redux';
 
 const InputForm = ({ navigation }) => {
-  console.log('🔍 DEBUG: InputForm component started');
 
-  // Test each hook individually
-  let showPicker, setShowPicker, dispatch, user;
 
-  try {
-    console.log('🔍 DEBUG: Testing useState...');
-    [showPicker, setShowPicker] = useState(false);
-    console.log('✅ DEBUG: useState successful');
-  } catch (error) {
-    console.error('❌ DEBUG: useState failed:', error);
-    return (
-      <SafeAreaView style={tw`flex-1 bg-red-100 justify-center items-center`}>
-        <Text style={tw`text-red-600 text-center p-4`}>
-          useState Hook Error: {error.message}
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
-  try {
-    console.log('🔍 DEBUG: Testing useDispatch...');
-    dispatch = useDispatch();
-    console.log('✅ DEBUG: useDispatch successful');
-  } catch (error) {
-    console.error('❌ DEBUG: useDispatch failed:', error);
-    return (
-      <SafeAreaView style={tw`flex-1 bg-red-100 justify-center items-center`}>
-        <Text style={tw`text-red-600 text-center p-4`}>
-          useDispatch Hook Error: {error.message}
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
-  try {
-    console.log('🔍 DEBUG: Testing useAuth...');
-    const authResult = useAuth();
-    console.log('✅ DEBUG: useAuth successful', authResult);
-    user = authResult?.user;
-  } catch (error) {
-    console.error('❌ DEBUG: useAuth failed:', error);
-    return (
-      <SafeAreaView style={tw`flex-1 bg-red-100 justify-center items-center`}>
-        <Text style={tw`text-red-600 text-center p-4`}>
-          useAuth Hook Error: {error.message}
-        </Text>
-      </SafeAreaView>
-    );
-  }
+const [showPicker, setShowPicker] = useState(false);
+const dispatch = useDispatch();
+const { user } = useAuth();
+console.log('uid',user?.uid);
 
   const [userData, setUserData] = useState({
+    uid: user?.uid || '',
+    email: user?.email || '',
     name: '',
     gender: '',
     schoolName: '',
@@ -83,8 +41,9 @@ const InputForm = ({ navigation }) => {
     dob: '',
     profileImage: '',
   });
+  console.log('userData', user);
 
-  console.log('🔍 DEBUG: All hooks successful, user:', user);
+
 
   const isFormValid = (userId) => {
     return (

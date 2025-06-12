@@ -4,9 +4,9 @@ import { body } from 'express-validator';
 import { registerUser } from '../controllers/user.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
 router.post(
-  '/register',
-  upload.single('profilePicture'), // Assuming the field name is 'profilePicture'
-  [
+  '/register',[
+   body('uid').notEmpty().withMessage('User ID is required'),
+   body('email').isEmail().withMessage('Please enter a valid email address'),
    body('name').notEmpty().withMessage('Name is required'),
    body('gender').notEmpty().withMessage('Gender is required'),
    body('schoolName').notEmpty().withMessage('School name is required'),
