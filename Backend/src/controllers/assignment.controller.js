@@ -1,6 +1,7 @@
 import asyncHandler from "../Helpers/AsyncHandler.js";
 import uploadOnCloudinary from "../Helpers/cloudinary.js";
 import { Assignment } from "../models/assignment.model.js";
+import { User } from "../models/user.model.js";
 import { validationResult } from "express-validator";
 export const createAssignment = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
@@ -36,7 +37,7 @@ export const createAssignment = asyncHandler(async (req, res) => {
 
 
 
-     const userExists = await User.findOne(uid);
+     const userExists = await User.findOne({ uid: uid });
     if (!userExists) {
       return res.status(404).json({
         message: "User not found",
