@@ -1,5 +1,6 @@
-import asyncHandler from "../Helpers/AsyncHandler";
-import { Assignment } from "../models/assignment.model";
+import asyncHandler from "../Helpers/AsyncHandler.js";
+import uploadOnCloudinary from "../Helpers/cloudinary.js";
+import { Assignment } from "../models/assignment.model.js";
 import { validationResult } from "express-validator";
 export const createAssignment = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
@@ -12,7 +13,13 @@ export const createAssignment = asyncHandler(async (req, res) => {
 
   try {
     const { uid,fullName, rollNumber, assignmentTitle, subjectName, completionDate, priority, description } = req.body;
-    const fileUrl = req.file ? req.file.path : null;
+   const file = req.file?.path;
+    const fileSumbit = await uploadOnCloudinary(file);
+    if (!fileSumbit) {
+      return res.status(400).json({ error: "Error uploading file" });
+    }
+
+
 
     const newAssignment = new Assignment({
       uid,
@@ -24,6 +31,7 @@ export const createAssignment = asyncHandler(async (req, res) => {
       priority,
       description,
       fileUrl,
+
     });
 
 

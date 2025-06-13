@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import { body } from 'express-validator';
 import { registerUser } from '../controllers/user.controller.js';
+import { createAssignment } from '../controllers/assignment.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
 router.post(
   '/register',[
@@ -17,7 +18,7 @@ router.post(
   ],
   registerUser
 );
-router.post('/new-assignment',)
+router.post('/new-assignment', upload.single('file'), createAssignment);
 export default router;
 
 

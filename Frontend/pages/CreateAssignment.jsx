@@ -7,9 +7,12 @@ import Icon from 'react-native-vector-icons/Ionicons'
 import { Picker } from '@react-native-picker/picker'
 import * as DocumentPicker from 'expo-document-picker'
 import { useAuth } from '../context/UserContext'
+import { createAssignment } from '../Redux/Slices/userSlice';
+import { useDispatch } from 'react-redux'
 
 const CreateAssignment = ({ navigation }) => {
   const { user } = useAuth()
+  const dispatch = useDispatch()
 
   // Form state
   const [formData, setFormData] = useState({
@@ -119,7 +122,7 @@ const CreateAssignment = ({ navigation }) => {
       }
 
       // TODO: Replace with actual API call
-      console.log('Assignment Data:', assignmentData)
+      await dispatch(createAssignment(assignmentData))
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))

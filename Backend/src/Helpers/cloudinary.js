@@ -1,44 +1,42 @@
 import dotenv from 'dotenv';
 dotenv.config();
+
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs/promises';
 
 cloudinary.config({
-  cloud_name:process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:process.env.CLOUDINARY_API_KEY,
-  api_secret:process.env.CLOUDINARY_API_SECRET
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
   try {
-
     if (!localFilePath) {
       console.error('No file path provided');
       return null;
     }
 
-    // Upload the file to Cloudinary
+    // Determine the file extension
+    const fileExt = localFilePath.split('.').pop().toLowerCase();
+
+    // Decide resource_type based on extension
+    const resourceType = (fileExt === 'pdf' || fileExt === 'doc' || fileExt === 'txt') ? 'raw' : 'image';
+
     const response = await cloudinary.uploader.upload(localFilePath, {
-      folder: 'sandesh',
-      resource_type: 'auto',
-      width: 250,
-      height: 250,
-      gravity: 'faces',
-      crop: 'fill'
+      folder: 'HomeWorkBaba',
+      resource_type: resourceType
+
     });
 
-    // File has been uploaded successfully
-    console.log('File is uploaded on Cloudinary', response.url);
+    console.log('File is uploaded on Cloudinary:', response.secure_url);
 
-    // Remove the locally saved temporary file using fs.rm
     await fs.rm(localFilePath);
     console.log('Local file removed:', localFilePath);
 
     return response;
   } catch (error) {
     console.error('Error uploading file:', error);
-
-    // Attempt to remove the locally saved temporary file
     try {
       if (await fs.stat(localFilePath)) {
         await fs.rm(localFilePath);
@@ -52,4 +50,4 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export default uploadOnCloudinary ;
+export default uploadOnCloudinary;
