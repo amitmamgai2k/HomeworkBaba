@@ -1,15 +1,40 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ImageBackground, StatusBar, SafeAreaView, Image } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import tw from '../tailwind';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const UserHomePage = ({ navigation }) => {
-  const userName = 'Amit';
+
+ const [userData, setUser] = useState(null);
+
+  useEffect(() => {
+    const getUserData = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('USER_DATA');
+        if (userData !== null) {
+          setUser(JSON.parse(userData));
+        } else {
+          console.log('No user data found');
+        }
+      } catch (error) {
+        console.error('Error retrieving data', error);
+      }
+    };
+
+    getUserData();
+  }, []);
+
+
+  console.log('userData', userData);
+
+
+  const userName = userData ? userData.name : 'User';
   const currentTime = new Date().getHours();
   let greeting = 'Good Morning';
 
@@ -245,7 +270,7 @@ const [showAllDueAssignments, setShowAllDueAssignments] = useState(false);
         <View style={tw`px-5 mt-6`}>
           <TouchableOpacity
             style={tw`bg-violet-600 py-4 rounded-2xl flex flex-row justify-center items-center shadow-sm`}
-            onPress={() => alert('Create a new assignment')}
+            onPress={() => navigation.navigate('CreateAssignment')}
           >
             <AntDesign name="plus" size={20} color="#fff" />
             <Text style={tw`text-white font-bold ml-2 text-lg`}>Add New Assignment</Text>

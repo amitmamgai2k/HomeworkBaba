@@ -47,6 +47,33 @@ export const registerUser = createAsyncThunk(
     }
   }
 );
+export const createAssignment = createAsyncThunk(
+  "user/createAssignment",
+  async (assignmentData, { rejectWithValue }) => {
+    try {
+      const currentUser = auth.currentUser;
+      const idToken = await currentUser.getIdToken();
+
+      const response = await axiosInstance.post("/users/new-assignment", assignmentData, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Error creating assignment:", error);
+      if (error.response) {
+        return rejectWithValue(error.response.data);
+      } else if (error.request) {
+        return rejectWithValue({ message: "Network error - no response from server" });
+      } else {
+        return rejectWithValue({ message: error.message });
+      }
+    }
+  }
+);
 
 const userSlice = createSlice({
   name: "user",
@@ -75,6 +102,19 @@ const userSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || { message: "Registration failed" };
+      })
+      .addCase(createAssignment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createAssignment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.assignments.push(action.payload);
+        state.error = null;
+      })
+      .addCase(createAssignment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || { message: "Failed to create assignment" };
       });
   },
 });
