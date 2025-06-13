@@ -7,6 +7,7 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  Button,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,9 +22,11 @@ import { useAuth } from '../context/UserContext';
 import { updateProfile } from 'firebase/auth';
 import { registerUser } from '../Redux/Slices/userSlice';
 import { useDispatch } from 'react-redux';
+import { unwrapResult } from '@reduxjs/toolkit';
+import { ActivityIndicator } from 'react-native';
 
 const InputForm = ({ navigation }) => {
-
+const[loading, setLoading] = useState(false);
 
 const [showPicker, setShowPicker] = useState(false);
 const dispatch = useDispatch();
@@ -81,33 +84,40 @@ console.log('uid',user?.uid);
       Alert.alert('Image Error', 'There was a problem selecting your image.');
     }
   };
+const handleSubmit = async () => {
+  console.log('userData', userData);
 
-  const handleSubmit = async () => {
-    console.log('userData', userData);
+  if (!isFormValid()) {
+    Alert.alert('Form Incomplete', 'Please fill all required fields.');
+    return;
+  }
 
-    if (!isFormValid()) {
-      Alert.alert('Form Incomplete', 'Please fill all required fields.');
-      return;
-    }
+  try {
+    setLoading(true); // Start spinner
 
-    try {
-      await AsyncStorage.setItem('USER_DATA', JSON.stringify(userData));
-      dispatch(registerUser(userData));
-      console.log('Dispatching user data:', userData);
-      Alert.alert('Success', 'Your profile has been updated successfully!');
+    await AsyncStorage.setItem('USER_DATA', JSON.stringify(userData));
 
-      updateProfile(user, {
-        displayName: userData.name,
-        photoURL: userData.profileImage,
-        phoneNumber: userData.phone,
-      });
+   const result =  await dispatch(registerUser(userData));
+    unwrapResult(result);
 
-      navigation.navigate('UserHomePage');
-    } catch (error) {
-      console.error('Error saving data:', error);
-      Alert.alert('Storage Error', 'Could not save your data. Please try again.');
-    }
-  };
+
+
+    Alert.alert('Success', 'Your profile has been updated successfully!');
+
+    updateProfile(user, {
+      displayName: userData.name,
+      photoURL: userData.profileImage,
+      phoneNumber: userData.phone,
+    });
+
+    navigation.navigate('UserHomePage');
+  } catch (error) {
+    console.error('Error:', error);
+    Alert.alert('Error', error.message || 'Something went wrong.');
+  } finally {
+    setLoading(false); // Stop spinner
+  }
+};
 
   const getDateObject = () => {
     if (userData.dob) {
@@ -120,12 +130,12 @@ console.log('uid',user?.uid);
     return new Date();
   };
 
+
+
   return (
     <SafeAreaView style={tw`flex-1 bg-gray-50`}>
-      <View style={tw`p-4 bg-green-100 mb-4`}>
-        <Text style={tw`text-green-800 font-bold`}>🎉 DEBUG: All hooks loaded successfully!</Text>
-        <Text style={tw`text-green-700`}>User: {user ? 'Logged In' : 'Not Logged In'}</Text>
-      </View>
+
+
 
       <ScrollView
         style={tw`flex-1`}
@@ -292,19 +302,26 @@ console.log('uid',user?.uid);
         </View>
       </ScrollView>
 
-      <View style={tw`px-6 py-4 border-t border-gray-200 bg-white shadow-md`}>
-        <TouchableOpacity
-          style={[
-            tw`rounded-xl py-4 items-center justify-center flex-row`,
-            isFormValid() ? tw`bg-violet-600` : tw`bg-gray-300`,
-          ]}
-          onPress={handleSubmit}
-          disabled={!isFormValid()}
-        >
-          <Text style={tw`text-white font-bold text-lg mr-2`}>SAVE AND CONTINUE</Text>
-          <Icon name="arrow-forward" size={20} color="#ffffff" />
-        </TouchableOpacity>
-      </View>
+    <View style={tw`px-6 py-4 border-t border-gray-200 bg-white shadow-md`}>
+  {loading ? (
+    <View style={tw`py-4 items-center`}>
+      <ActivityIndicator size="large" color="#7c3aed" />
+    </View>
+  ) : (
+    <TouchableOpacity
+      style={[
+        tw`rounded-xl py-4 items-center justify-center flex-row`,
+        isFormValid() ? tw`bg-violet-600` : tw`bg-gray-300`,
+      ]}
+      onPress={handleSubmit}
+      disabled={!isFormValid()}
+    >
+      <Text style={tw`text-white font-bold text-lg mr-2`}>SAVE AND CONTINUE</Text>
+      <Icon name="arrow-forward" size={20} color="#ffffff" />
+    </TouchableOpacity>
+  )}
+</View>
+
     </SafeAreaView>
   );
 };

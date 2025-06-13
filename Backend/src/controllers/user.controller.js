@@ -11,7 +11,8 @@ export const registerUser = asyncHandler(async (req, res) => {
     });
   }
 
-  const { uid, email, name, gender, schoolName, major, dob, phone, profileImage } = req.body;
+ try {
+   const { uid, email, name, gender, schoolName, major, dob, phone, profileImage } = req.body;
 
   const existingUser = await User.findOne({ uid });
   if (existingUser) {
@@ -29,4 +30,10 @@ export const registerUser = asyncHandler(async (req, res) => {
     message: "User registered successfully",
     user: newUser,
   });
+ } catch (error) {
+   console.error("Error registering user:", error);
+   res.status(500).json({
+     message: "Internal server error",
+   });
+ }
 });

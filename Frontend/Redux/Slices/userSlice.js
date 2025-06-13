@@ -1,5 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../axiosInstance";
+import { ToastAndroid } from "react-native";
+import { auth } from "../../firebase.config";
 
 const initialState = {
   user: null,
@@ -14,7 +16,7 @@ export const registerUser = createAsyncThunk(
       console.log("Registering user with data:", userData);
 
 
-      const currentUser = auth().currentUser;
+      const currentUser = auth.currentUser;
       const idToken = await currentUser.getIdToken();
 
 
@@ -29,6 +31,10 @@ export const registerUser = createAsyncThunk(
       return response.data;
 
     } catch (error) {
+      ToastAndroid.show(
+        error.response?.data?.message || "Registration failed",
+        ToastAndroid.SHORT
+      );
       console.error("Error registering user:", error);
 
       if (error.response) {
