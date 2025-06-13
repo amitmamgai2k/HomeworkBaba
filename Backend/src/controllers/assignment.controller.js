@@ -36,7 +36,7 @@ export const createAssignment = asyncHandler(async (req, res) => {
 
 
 
-     const userExists = await User.findById(uid);
+     const userExists = await User.findOne(uid);
     if (!userExists) {
       return res.status(404).json({
         message: "User not found",
