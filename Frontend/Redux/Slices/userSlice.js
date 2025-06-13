@@ -53,6 +53,7 @@ export const createAssignment = createAsyncThunk(
     try {
       const currentUser = auth.currentUser;
       const idToken = await currentUser.getIdToken();
+      console.log("Creating assignment with data:", assignmentData);
 
       const response = await axiosInstance.post("/users/new-assignment", assignmentData, {
         headers: {

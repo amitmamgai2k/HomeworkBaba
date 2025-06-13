@@ -13,11 +13,11 @@ export const createAssignment = asyncHandler(async (req, res) => {
 
   try {
     const { uid,fullName, rollNumber, assignmentTitle, subjectName, completionDate, priority, description } = req.body;
-   const file = req.file?.path;
-    const fileSumbit = await uploadOnCloudinary(file);
-    if (!fileSumbit) {
-      return res.status(400).json({ error: "Error uploading file" });
-    }
+  //  const file = req.file?.path;
+  //   const fileSumbit = await uploadOnCloudinary(file);
+  //   if (!fileSumbit) {
+  //     return res.status(400).json({ error: "Error uploading file" });
+  //   }
 
 
 
@@ -30,7 +30,7 @@ export const createAssignment = asyncHandler(async (req, res) => {
       completionDate,
       priority,
       description,
-      fileUrl: fileSumbit.secure_url,
+      // fileUrl: fileSumbit.secure_url,
 
     });
 

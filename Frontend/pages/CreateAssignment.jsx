@@ -116,7 +116,7 @@ const CreateAssignment = ({ navigation }) => {
         completionDate: completionDate.toISOString(),
         priority: priority,
         description: formData.description.trim(),
-        fileUrl: selectedFile,
+        // fileUrl: selectedFile,
         createdAt: new Date().toISOString(),
         status: 'pending'
       }
