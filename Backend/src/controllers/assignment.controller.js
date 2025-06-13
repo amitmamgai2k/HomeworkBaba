@@ -30,7 +30,7 @@ export const createAssignment = asyncHandler(async (req, res) => {
       completionDate,
       priority,
       description,
-      fileUrl,
+      fileUrl: fileSumbit.secure_url,
 
     });
 

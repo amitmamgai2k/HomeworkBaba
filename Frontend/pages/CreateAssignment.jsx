@@ -111,12 +111,12 @@ const CreateAssignment = ({ navigation }) => {
         uid: user?.uid || '',
         fullName: formData.fullName.trim(),
         rollNumber: formData.rollNumber.trim(),
-        title: formData.title.trim(),
-        subject: formData.subject.trim(),
+         assignmentTitle: formData.title.trim(),
+        subjectName: formData.subject.trim(),
         completionDate: completionDate.toISOString(),
         priority: priority,
         description: formData.description.trim(),
-        file: selectedFile,
+        fileUrl: selectedFile,
         createdAt: new Date().toISOString(),
         status: 'pending'
       }
