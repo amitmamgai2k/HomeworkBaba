@@ -42,9 +42,9 @@ const assignmentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    // fileUrl: {
-    //   type: String,
-    // },
+    fileUrl: {
+      type: String,
+    },
   },
   {
     timestamps: true,

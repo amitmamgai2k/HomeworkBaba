@@ -31,6 +31,10 @@ export const createAssignment = asyncHandler(async (req, res) => {
         message: "All fields are required",
       });
     }
+    const file = req.file?.path;
+    const fileSumbit = file ? await uploadOnCloudinary(file) : null;
+
+
 
 
 
@@ -51,7 +55,7 @@ export const createAssignment = asyncHandler(async (req, res) => {
       completionDate,
       priority,
       description,
-      // fileUrl: fileSumbit.secure_url,
+      fileUrl:fileSumbit.url || null
     });
 
 

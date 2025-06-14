@@ -18,7 +18,7 @@ router.post(
   ],
   registerUser
 );
-router.post('/new-assignment', createAssignment);
+router.post('/new-assignment', upload.single('file'), createAssignment);
 export default router;
 
 

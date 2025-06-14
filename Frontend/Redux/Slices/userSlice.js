@@ -6,6 +6,7 @@ import { auth } from "../../firebase.config";
 const initialState = {
   user: null,
   loading: false,
+  assignments: [],
   error: null,
 };
 
