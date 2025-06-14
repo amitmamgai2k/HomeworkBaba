@@ -24,6 +24,15 @@ export const createAssignment = asyncHandler(async (req, res) => {
       priority,
       description
     } = req.body;
+    console.log("Creating assignment with data:", req.body);
+
+    if(!uid || !fullName || !rollNumber || !assignmentTitle || !subjectName || !completionDate || !priority || !description) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
+    }
+
+
 
     // Check if user exists first
     const userExists = await User.findOne({ uid: uid });
@@ -55,7 +64,7 @@ export const createAssignment = asyncHandler(async (req, res) => {
     console.error("Error creating assignment:", error);
     res.status(500).json({
       message: "Internal server mai error hai", // Fixed the message
-      error: error.message,
+      error: error.message, data:req.body
     });
   }
 });

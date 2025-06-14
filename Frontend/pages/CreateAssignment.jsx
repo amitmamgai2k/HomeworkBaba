@@ -104,6 +104,7 @@ const CreateAssignment = ({ navigation }) => {
     }
 
     setIsSubmitting(true)
+    console.log('uid', user?.uid);
 
     try {
       // Prepare assignment data
@@ -117,8 +118,8 @@ const CreateAssignment = ({ navigation }) => {
         priority: priority,
         description: formData.description.trim(),
         // fileUrl: selectedFile,
-        createdAt: new Date().toISOString(),
-        status: 'pending'
+        // createdAt: new Date().toISOString(),
+        // status: 'pending'
       }
 
       // TODO: Replace with actual API call
