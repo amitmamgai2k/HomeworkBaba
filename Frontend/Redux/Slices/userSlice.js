@@ -16,10 +16,8 @@ export const registerUser = createAsyncThunk(
     try {
       console.log("Registering user with data:", userData);
 
-
       const currentUser = auth.currentUser;
       const idToken = await currentUser.getIdToken();
-
 
       const response = await axiosInstance.post("/users/register", userData, {
         headers: {
@@ -48,6 +46,7 @@ export const registerUser = createAsyncThunk(
     }
   }
 );
+
 export const createAssignment = createAsyncThunk(
   "user/createAssignment",
   async (assignmentData, { rejectWithValue }) => {
@@ -56,10 +55,32 @@ export const createAssignment = createAsyncThunk(
       const idToken = await currentUser.getIdToken();
       console.log("Creating assignment with data:", assignmentData);
 
-      const response = await axiosInstance.post("/users/new-assignment", assignmentData, {
+      // Create FormData for file upload
+      const formData = new FormData();
+
+      // Append all text fields
+      formData.append('uid', assignmentData.uid);
+      formData.append('fullName', assignmentData.fullName);
+      formData.append('rollNumber', assignmentData.rollNumber);
+      formData.append('assignmentTitle', assignmentData.assignmentTitle);
+      formData.append('subjectName', assignmentData.subjectName);
+      formData.append('completionDate', assignmentData.completionDate);
+      formData.append('priority', assignmentData.priority);
+      formData.append('description', assignmentData.description);
+
+      // Append file if exists
+      if (assignmentData.fileUrl) {
+        formData.append('fileUrl', {
+          uri: assignmentData.fileUrl.uri,
+          type: assignmentData.fileUrl.type,
+          name: assignmentData.fileUrl.name,
+        });
+      }
+
+      const response = await axiosInstance.post("/users/new-assignment", formData, {
         headers: {
           Authorization: `Bearer ${idToken}`,
-          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
         },
       });
 

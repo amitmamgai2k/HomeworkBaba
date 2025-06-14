@@ -24,19 +24,16 @@ export const createAssignment = asyncHandler(async (req, res) => {
       priority,
       description
     } = req.body;
-    console.log("Creating assignment with data:", req.body);
 
+    console.log("Creating assignment with data:", req.body);
+    console.log("File received:", req.file);
+
+    // Validate required fields
     if(!uid || !fullName || !rollNumber || !assignmentTitle || !subjectName || !completionDate || !priority || !description) {
       return res.status(400).json({
-        message: "All fields are required",
+        message: "All required fields must be provided",
       });
     }
-    const file = req.file?.path;
-    const fileSumbit = file ? await uploadOnCloudinary(file) : null;
-
-
-
-
 
     // Check if user exists first
     const userExists = await User.findOne({ uid: uid });
@@ -46,29 +43,44 @@ export const createAssignment = asyncHandler(async (req, res) => {
       });
     }
 
+    // Handle file upload if file exists
+    let fileUrl = null;
+    if (req.file?.path) {
+      console.log("Uploading file to Cloudinary...");
+      const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+
+      if (cloudinaryResponse) {
+        fileUrl = cloudinaryResponse.secure_url;
+        console.log("File uploaded successfully:", fileUrl);
+      } else {
+        console.log("File upload failed");
+      }
+    }
+
+    // Create assignment
     const newAssignment = await Assignment.create({
       uid,
       fullName,
       rollNumber,
       assignmentTitle,
       subjectName,
-      completionDate,
+      completionDate: new Date(completionDate),
       priority,
       description,
-      fileUrl:fileSumbit.url || null
+      fileUrl: fileUrl
     });
-
-
 
     res.status(201).json({
       message: "Assignment created successfully",
       assignment: newAssignment,
     });
+
   } catch (error) {
     console.error("Error creating assignment:", error);
     res.status(500).json({
-      message: "Internal server mai error hai", // Fixed the message
-      error: error.message, data:req.body
+      message: "Internal server error",
+      error: error.message,
+      data: req.body
     });
   }
 });
