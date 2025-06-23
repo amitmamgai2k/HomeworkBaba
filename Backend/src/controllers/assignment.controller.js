@@ -84,3 +84,32 @@ export const createAssignment = asyncHandler(async (req, res) => {
     });
   }
 });
+export const getAssignments = asyncHandler(async (req, res) => {
+  const {uid}  = req.params;
+  try {
+    if(!uid){
+      return res.status(400).json({
+        message: "User ID is required",
+      });
+    }
+    const assignments = await Assignment.find({ uid: uid }).sort({ createdAt: -1 });
+    if(!assignments) {
+      return res.status(404).json({
+        message: "No assignments found for this user",
+      });
+    }
+
+    res.status(200).json({
+      message: "Assignments fetched successfully",
+      assignments: assignments,
+    });
+  } catch (error) {
+    console.error("Error fetching assignments:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+
+  }
+
+})

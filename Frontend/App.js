@@ -12,6 +12,7 @@ import CreateAssignment from "./pages/CreateAssignment";
 import InputForm from "./pages/InputForm";
 import VerifyEmail from "./pages/VerifyEmail";
 import UserProfile from "./pages/UserProfile";
+import MyAssignment from "./pages/MyAssignment";
 import { store } from "./Redux/store";
 import { Provider } from "react-redux";
 
@@ -70,6 +71,13 @@ const App = () => {
 								<Stack.Screen
 									name="UserProfile"
 									component={UserProfile}
+									options={{
+										headerShown: false,
+									}}
+								/>
+								<Stack.Screen
+									name="MyAssignments"
+									component={MyAssignment}
 									options={{
 										headerShown: false,
 									}}

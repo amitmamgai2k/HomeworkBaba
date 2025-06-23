@@ -97,6 +97,33 @@ export const createAssignment = createAsyncThunk(
     }
   }
 );
+export const fetchAssignments = createAsyncThunk(
+  "user/fetchAssignments",
+  async (uid, { rejectWithValue }) => {
+    try {
+      const currentUser = auth.currentUser;
+      const idToken = await currentUser.getIdToken();
+
+      const response = await axiosInstance.get(`/users/assignments/${uid}`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+      if (error.response) {
+        return rejectWithValue(error.response.data);
+      } else if (error.request) {
+        return rejectWithValue({ message: "Network error - no response from server" });
+      } else {
+        return rejectWithValue({ message: error.message });
+      }
+    }
+  }
+);
+
 
 const userSlice = createSlice({
   name: "user",
@@ -138,6 +165,19 @@ const userSlice = createSlice({
       .addCase(createAssignment.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || { message: "Failed to create assignment" };
+      })
+      .addCase(fetchAssignments.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAssignments.fulfilled, (state, action) => {
+        state.loading = false;
+        state.assignments = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchAssignments.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || { message: "Failed to fetch assignments" };
       });
   },
 });

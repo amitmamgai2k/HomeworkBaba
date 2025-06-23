@@ -422,11 +422,11 @@ const [showAllDueAssignments, setShowAllDueAssignments] = useState(false);
           <Text style={tw`text-xs font-bold text-violet-700`}>Create</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={tw`flex-1 items-center justify-center py-2`}>
+        <TouchableOpacity style={tw`flex-1 items-center justify-center py-2`} onPress = {() => navigation.navigate('MyAssignments')}>
           <View style={tw`bg-violet-500 p-2 rounded-xl mb-1`}>
             <Entypo name="clipboard" size={22} color="#fff" />
           </View>
-          <Text style={tw`text-xs font-bold text-violet-700`}>Assignments</Text>
+          <Text style={tw`text-xs font-bold text-violet-700`}>My Assignments</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={tw`flex-1 items-center justify-center py-2`} onPress={() => navigation.navigate('UserProfile')}>

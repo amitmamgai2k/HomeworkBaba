@@ -4,6 +4,7 @@ import { body } from 'express-validator';
 import { registerUser } from '../controllers/user.controller.js';
 import { createAssignment } from '../controllers/assignment.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
+
 router.post(
   '/register',[
    body('uid').notEmpty().withMessage('User ID is required'),
@@ -19,6 +20,7 @@ router.post(
   registerUser
 );
 router.post('/new-assignment', upload.single('fileUrl'), createAssignment);
+router.get('get-assignments/:uid',getA)
 export default router;
 
 
