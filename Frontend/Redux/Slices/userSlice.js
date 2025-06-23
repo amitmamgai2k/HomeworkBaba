@@ -104,7 +104,7 @@ export const fetchAssignments = createAsyncThunk(
       const currentUser = auth.currentUser;
       const idToken = await currentUser.getIdToken();
 
-      const response = await axiosInstance.get(`/users/assignments/${uid}`, {
+      const response = await axiosInstance.get(`/users/get-assignments/${uid}`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },
