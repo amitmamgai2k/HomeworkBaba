@@ -50,7 +50,7 @@ export const createAssignment = asyncHandler(async (req, res) => {
       const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
 
       if (cloudinaryResponse) {
-        fileUrl = cloudinaryResponse.secure_url;
+        fileUrl = cloudinaryResponse.downloadUrl || cloudinaryResponse.previewUrl;
         console.log("File uploaded successfully:", fileUrl);
       } else {
         console.log("File upload failed");
