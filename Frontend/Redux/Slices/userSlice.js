@@ -110,7 +110,7 @@ export const fetchAssignments = createAsyncThunk(
         },
       });
 
-      return response.data;
+      return response.data.assignments;
     } catch (error) {
       console.error("Error fetching assignments:", error);
       if (error.response) {
