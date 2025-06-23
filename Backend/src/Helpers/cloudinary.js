@@ -41,7 +41,9 @@ const uploadOnCloudinary = async (localFilePath) => {
     await fs.unlink(localFilePath);
     console.log('🧹 Local file deleted:', localFilePath);
 
-    const downloadUrl = response.secure_url.replace('/upload/', '/upload/fl_attachment/');
+    const downloadUrl = response.secure_url
+  .replace('/image/upload/', '/raw/upload/')
+  .replace('/upload/', '/upload/fl_attachment/');
 
     return {
       previewUrl: response.secure_url,
