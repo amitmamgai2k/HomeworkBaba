@@ -46,7 +46,7 @@ const UserHomePage = ({ navigation }) => {
 
 
 
-  console.log('assignmentStatus', assignmentStatus);
+
 
 
 
@@ -266,7 +266,7 @@ const [showAllDueAssignments, setShowAllDueAssignments] = useState(false);
                 <AntDesign name="clockcircle" size={20} color="#fff" />
               </View>
               <View>
-                <Text style={tw`text-white text-3xl font-bold`}>03</Text>
+                <Text style={tw`text-white text-3xl font-bold`}>{assignmentStatus?.pending}</Text>
                 <Text style={tw`text-white`}>Pending</Text>
               </View>
             </TouchableOpacity>
@@ -275,7 +275,7 @@ const [showAllDueAssignments, setShowAllDueAssignments] = useState(false);
                 <AntDesign name="checkcircle" size={20} color="#fff" />
               </View>
               <View>
-                <Text style={tw`text-white text-3xl font-bold`}>12</Text>
+                <Text style={tw`text-white text-3xl font-bold`}>{assignmentStatus?.completed}</Text>
                 <Text style={tw`text-white`}>Completed</Text>
               </View>
             </TouchableOpacity>

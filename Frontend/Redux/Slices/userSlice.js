@@ -211,8 +211,9 @@ const userSlice = createSlice({
       })
       .addCase(fetchAssignmentStatus.fulfilled, (state, action) => {
         state.loading = false;
-        state.assignmentStatus = action.payload.assignmentStatus;
-        ToastAndroid.show("Assignment status fetched successfully", ToastAndroid.SHORT);
+        state.assignmentStatus = action.payload;
+
+
         state.error = null;
       })
       .addCase(fetchAssignmentStatus.rejected, (state, action) => {
