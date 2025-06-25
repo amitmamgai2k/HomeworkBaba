@@ -7,6 +7,7 @@ const initialState = {
   user: null,
   loading: false,
   assignments: [],
+  assignmentStatus: [],
   error: null,
 };
 
@@ -123,6 +124,31 @@ export const fetchAssignments = createAsyncThunk(
     }
   }
 );
+export const fetchAssignmentStatus = createAsyncThunk(
+  "user/fetchAssignmentStatus",
+  async (uid,{ rejectWithValue }) => {
+    try {
+      const currentUser = auth.currentUser;
+      const idToken = await currentUser.getIdToken();
+
+      const response = await axiosInstance.get(`/users/get-assignment-status/${uid}`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching assignment status:", error);
+      if (error.response) {
+        return rejectWithValue(error.response.data);
+      } else if (error.request) {
+        return rejectWithValue({ message: "Network error - no response from server" });
+      } else {
+        return rejectWithValue({ message: error.message });
+      }
+    }
+  }
+  );
 
 
 const userSlice = createSlice({
@@ -178,6 +204,20 @@ const userSlice = createSlice({
       .addCase(fetchAssignments.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || { message: "Failed to fetch assignments" };
+      })
+      .addCase(fetchAssignmentStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAssignmentStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        state.assignmentStatus = action.payload.assignmentStatus;
+        ToastAndroid.show("Assignment status fetched successfully", ToastAndroid.SHORT);
+        state.error = null;
+      })
+      .addCase(fetchAssignmentStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || { message: "Failed to fetch assignment status" };
       });
   },
 });

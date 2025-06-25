@@ -112,4 +112,55 @@ export const getAssignments = asyncHandler(async (req, res) => {
 
   }
 
-})
+});
+export const getAssignmentStatus = asyncHandler(async (req, res) => {
+  const { uid } = req.params;
+
+  if (!uid) {
+    return res.status(400).json({
+      message: "User ID is required",
+    });
+  }
+
+  try {
+
+    const assignments = await Assignment.find({ uid }, { status: 1 });
+
+
+    let pending = 0;
+    let completed = 0;
+    let overdue = 0;
+
+
+    assignments.forEach((assignment) => {
+      switch (assignment.status) {
+        case "pending":
+          pending++;
+          break;
+        case "completed":
+          completed++;
+          break;
+        case "overdue":
+          overdue++;
+          break;
+        default:
+          break;
+      }
+    });
+
+    res.status(200).json({
+      pending: pending,
+      completed: completed,
+      overdue: overdue,
+      message: "Assignment status fetched successfully",
+
+
+    });
+  } catch (error) {
+    console.error("Error fetching assignment status:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});

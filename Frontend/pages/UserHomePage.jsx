@@ -7,11 +7,20 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch, useSelector } from 'react-redux';
+import { useAuth } from '../context/UserContext';
+import { fetchAssignmentStatus } from '../Redux/Slices/userSlice';
 
 
 const UserHomePage = ({ navigation }) => {
+  const { user } = useAuth();
+  const uid = user?.uid;
 
  const [userData, setUser] = useState(null);
+ const dispatch = useDispatch();
+ const{assignmentStatus} = useSelector((state) => state.user);
+
+
 
   useEffect(() => {
     const getUserData = async () => {
@@ -27,11 +36,18 @@ const UserHomePage = ({ navigation }) => {
       }
     };
 
+
     getUserData();
+
   }, []);
+  useEffect(() => {
+    dispatch(fetchAssignmentStatus(uid));
+  }, [userData, dispatch]);
 
 
-  console.log('userData', userData);
+
+  console.log('assignmentStatus', assignmentStatus);
+
 
 
   const userName = userData ? userData.name : 'User';
@@ -251,7 +267,7 @@ const [showAllDueAssignments, setShowAllDueAssignments] = useState(false);
               </View>
               <View>
                 <Text style={tw`text-white text-3xl font-bold`}>03</Text>
-                <Text style={tw`text-white`}>Due Soon</Text>
+                <Text style={tw`text-white`}>Pending</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity style={tw`h-30 flex-1 bg-white bg-opacity-20 rounded-2xl p-4 justify-between`}>

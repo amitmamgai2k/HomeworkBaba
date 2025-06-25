@@ -46,6 +46,18 @@ const MyAssignment = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'overdue':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   const isOverdue = (completionDate) => {
     return new Date(completionDate) < new Date();
@@ -94,11 +106,19 @@ const MyAssignment = () => {
                         </Text>
                       </View>
                     </View>
-
-                    {/* Assignment Title */}
-                    <Text style={tw`text-lg font-bold text-black mb-2 `}>
+                    <View style={tw`flex flex-row justify-between items-center mb-3`}>
+                      <Text style={tw`text-lg font-bold text-black mb-2 `}>
                       {assignment.assignmentTitle}
                     </Text>
+                      <View style={tw`px-2 py-1 rounded-full ${getStatusColor(assignment.status)}`}>
+                        <Text style={tw`text-xs font-semibold capitalize`}>
+                          {assignment.status}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Assignment Title */}
+
 
                     {/* Subject and Student Info */}
                     <View style={tw`flex flex-row justify-between mb-2`}>
