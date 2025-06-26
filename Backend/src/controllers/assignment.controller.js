@@ -87,6 +87,7 @@ export const createAssignment = asyncHandler(async (req, res) => {
 export const getAssignments = asyncHandler(async (req, res) => {
   const { uid } = req.params;
   const { status } = req.query;
+  console.log("Fetching assignments for user:", uid, "with status:", status);
 
   try {
     // Validate required parameters
@@ -173,6 +174,12 @@ export const getAssignmentStatus = asyncHandler(async (req, res) => {
           break;
       }
     });
+    console.log("Assignment status for user:", uid, {
+      pending,
+      completed,
+      overdue,
+    });
+
 
     res.status(200).json({
       pending: pending,
