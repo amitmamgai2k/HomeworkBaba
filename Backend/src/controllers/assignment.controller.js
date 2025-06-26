@@ -89,10 +89,19 @@ export const getAssignments = asyncHandler(async (req, res) => {
   const { status } = req.query;
 
   try {
+    // Validate required parameters
     if (!uid) {
       return res.status(400).json({ message: "User ID is required" });
     }
 
+    // Validate status if provided (optional enhancement)
+    if (status && !['pending', 'completed', 'overdue'].includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status. Must be 'pending', 'completed', or 'overdue'"
+      });
+    }
+
+    // Build query object
     const query = { uid };
     let responseMessage = "All assignments fetched successfully";
 
@@ -101,29 +110,35 @@ export const getAssignments = asyncHandler(async (req, res) => {
       responseMessage = `Assignments with status '${status}' fetched successfully`;
     }
 
+    // Fetch assignments
     const assignments = await Assignment.find(query).sort({ createdAt: -1 });
 
+    // Handle empty results
     if (!assignments || assignments.length === 0) {
       return res.status(404).json({
         message: status
-          ? `No assignments found with status '${status}'`
+          ? `No assignments found with status '${status}' for this user`
           : "No assignments found for this user",
       });
     }
 
+    // Successful response
     res.status(200).json({
+      success: true,
       message: responseMessage,
+      count: assignments.length,
       assignments: assignments,
     });
+
   } catch (error) {
     console.error("Error fetching assignments:", error);
     res.status(500).json({
+      success: false,
       message: "Internal server error",
       error: error.message,
     });
   }
 });
-
 export const getAssignmentStatus = asyncHandler(async (req, res) => {
   const { uid } = req.params;
 

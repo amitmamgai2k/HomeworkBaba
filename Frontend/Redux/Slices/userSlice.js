@@ -106,6 +106,7 @@ export const fetchAssignments = createAsyncThunk(
       const idToken = await currentUser.getIdToken();
 
       const query = status ? `?status=${status}` : "";
+
       console.log("Fetching assignments for UID:", uid, "with status:", query);
       const response = await axiosInstance.get(`/users/get-assignments/${uid}${query}`, {
         headers: {

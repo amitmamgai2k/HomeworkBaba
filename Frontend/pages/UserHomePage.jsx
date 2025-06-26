@@ -45,7 +45,7 @@ const UserHomePage = ({ navigation }) => {
   }, []);
   useEffect(() => {
     dispatch(fetchAssignmentStatus(uid));
-    dispatch(fetchAssignments({ uid, status: 'due' }));
+    dispatch(fetchAssignments({ uid, status: 'completed' }));
   }, [uid, dispatch]);
 
 
@@ -57,7 +57,7 @@ const UserHomePage = ({ navigation }) => {
 
   }, []);
 
-  console.log('assignmentStatus', assignments);
+  console.log('assignmentStatusAtHomePAge', assignments);
 
 
 
