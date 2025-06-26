@@ -24,7 +24,7 @@ const MyAssignment = () => {
       }
       setLoading(true);
       try {
-        await dispatch(fetchAssignments(uid)).unwrap();
+        await dispatch(fetchAssignments({uid:uid})).unwrap();
       } catch (error) {
         console.error("Error fetching assignments:", error);
       }

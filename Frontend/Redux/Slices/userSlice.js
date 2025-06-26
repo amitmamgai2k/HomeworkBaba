@@ -100,12 +100,14 @@ export const createAssignment = createAsyncThunk(
 );
 export const fetchAssignments = createAsyncThunk(
   "user/fetchAssignments",
-  async (uid, { rejectWithValue }) => {
+  async ({ uid, status }, { rejectWithValue }) => {
     try {
       const currentUser = auth.currentUser;
       const idToken = await currentUser.getIdToken();
 
-      const response = await axiosInstance.get(`/users/get-assignments/${uid}`, {
+      const query = status ? `?status=${status}` : "";
+      console.log("Fetching assignments for UID:", uid, "with status:", query);
+      const response = await axiosInstance.get(`/users/get-assignments/${uid}${query}`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },
@@ -124,6 +126,7 @@ export const fetchAssignments = createAsyncThunk(
     }
   }
 );
+
 export const fetchAssignmentStatus = createAsyncThunk(
   "user/fetchAssignmentStatus",
   async (uid,{ rejectWithValue }) => {

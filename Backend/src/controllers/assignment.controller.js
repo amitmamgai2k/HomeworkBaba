@@ -85,22 +85,34 @@ export const createAssignment = asyncHandler(async (req, res) => {
   }
 });
 export const getAssignments = asyncHandler(async (req, res) => {
-  const {uid}  = req.params;
+  const { uid } = req.params;
+  const { status } = req.query;
+
   try {
-    if(!uid){
-      return res.status(400).json({
-        message: "User ID is required",
-      });
+    if (!uid) {
+      return res.status(400).json({ message: "User ID is required" });
     }
-    const assignments = await Assignment.find({ uid: uid }).sort({ createdAt: -1 });
-    if(!assignments) {
+
+    const query = { uid };
+    let responseMessage = "All assignments fetched successfully";
+
+    if (status) {
+      query.status = status;
+      responseMessage = `Assignments with status '${status}' fetched successfully`;
+    }
+
+    const assignments = await Assignment.find(query).sort({ createdAt: -1 });
+
+    if (!assignments || assignments.length === 0) {
       return res.status(404).json({
-        message: "No assignments found for this user",
+        message: status
+          ? `No assignments found with status '${status}'`
+          : "No assignments found for this user",
       });
     }
 
     res.status(200).json({
-      message: "Assignments fetched successfully",
+      message: responseMessage,
       assignments: assignments,
     });
   } catch (error) {
@@ -109,10 +121,9 @@ export const getAssignments = asyncHandler(async (req, res) => {
       message: "Internal server error",
       error: error.message,
     });
-
   }
-
 });
+
 export const getAssignmentStatus = asyncHandler(async (req, res) => {
   const { uid } = req.params;
 

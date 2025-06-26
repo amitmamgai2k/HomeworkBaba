@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ImageBackground, StatusBar, SafeAreaView, Image } from 'react-native';
-import React, { use, useEffect, useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ImageBackground, StatusBar, SafeAreaView, RefreshControl } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
 import tw from '../tailwind';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../context/UserContext';
 import { fetchAssignmentStatus } from '../Redux/Slices/userSlice';
+import { fetchAssignments } from '../Redux/Slices/userSlice';
 
 
 const UserHomePage = ({ navigation }) => {
@@ -17,8 +18,10 @@ const UserHomePage = ({ navigation }) => {
   const uid = user?.uid;
 
  const [userData, setUser] = useState(null);
+ const [refreshing, setRefreshing] = useState(false);
  const dispatch = useDispatch();
  const{assignmentStatus} = useSelector((state) => state.user);
+ const{assignments} = useSelector((state) => state.user);
 
 
 
@@ -42,9 +45,19 @@ const UserHomePage = ({ navigation }) => {
   }, []);
   useEffect(() => {
     dispatch(fetchAssignmentStatus(uid));
-  }, [userData, dispatch]);
+    dispatch(fetchAssignments({ uid, status: 'due' }));
+  }, [uid, dispatch]);
 
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+
+  }, []);
+
+  console.log('assignmentStatus', assignments);
 
 
 
@@ -236,9 +249,16 @@ const [showAllDueAssignments, setShowAllDueAssignments] = useState(false);
 
   return (
     <SafeAreaView style={tw`flex-1 bg-gray-50 `}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={tw`pb-24`}>
+
+
+      <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={tw`pb-24`}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh}  />
+      }
+    >
         {/* Header */}
         <View style={[tw`px-5 pt-6 pb-6 rounded-b-3xl`, styles.headerGradient]}>
           <View style={tw`flex flex-row justify-between items-center mb-4`}>
@@ -261,6 +281,15 @@ const [showAllDueAssignments, setShowAllDueAssignments] = useState(false);
 
           {/* Assignment stats */}
           <View style={tw`flex flex-row justify-between`}>
+             <TouchableOpacity style={tw`h-30 flex-1 bg-white bg-opacity-20 rounded-2xl mr-3 p-4 justify-between`}>
+              <View style={tw`w-10 h-10 bg-white bg-opacity-20 rounded-lg justify-center items-center`}>
+                <AntDesign name="exclamationcircle" size={20} color="#fff" />
+              </View>
+              <View>
+                <Text style={tw`text-white text-3xl font-bold`}>{assignmentStatus?.overdue}</Text>
+                <Text style={tw`text-white`}>Overdue</Text>
+              </View>
+            </TouchableOpacity>
             <TouchableOpacity style={tw`h-30 flex-1 bg-white bg-opacity-20 rounded-2xl mr-3 p-4 justify-between`}>
               <View style={tw`w-10 h-10 bg-white bg-opacity-20 rounded-lg justify-center items-center`}>
                 <AntDesign name="clockcircle" size={20} color="#fff" />
