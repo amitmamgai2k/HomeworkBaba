@@ -16,12 +16,13 @@ import { fetchAssignments } from '../Redux/Slices/userSlice';
 const UserHomePage = ({ navigation }) => {
   const { user } = useAuth();
   const uid = user?.uid;
+  const [loading, setLoading] = useState(false);
 
  const [userData, setUser] = useState(null);
  const [refreshing, setRefreshing] = useState(false);
  const dispatch = useDispatch();
- const{assignmentStatus} = useSelector((state) => state.user);
- const{assignments} = useSelector((state) => state.user);
+ const { assignmentStatus } = useSelector((state) => state.user);
+ const assignments = useSelector((state) => state.user?.assignments || []);
 
 
 
@@ -43,9 +44,23 @@ const UserHomePage = ({ navigation }) => {
     getUserData();
 
   }, []);
-  useEffect(() => {
-    dispatch(fetchAssignmentStatus(uid));
-    dispatch(fetchAssignments({ uid:uid , status: 'completed' }));
+   useEffect(() => {
+    const loadAssignments = async () => {
+      if (!uid) {
+        console.error("User ID is not available");
+        return;
+      }
+      setLoading(true);
+      try {
+        await dispatch(fetchAssignmentStatus(uid)).unwrap();
+        await dispatch(fetchAssignments({uid:uid, status:'overdue'})).unwrap();
+      } catch (error) {
+        console.error("Error fetching assignments:", error);
+      }
+      setLoading(false);
+    };
+
+    loadAssignments();
   }, [uid, dispatch]);
 
 
@@ -76,34 +91,16 @@ const UserHomePage = ({ navigation }) => {
   }
 
 
-  const dueAssignments = [
-    {
-      id: 1,
-      title: 'Data Communication And Networking',
-      subject: 'Computer Science',
-      dueDate: '5/12/2025',
-      progress: 65,
-      priority: 'high',
-    },
-    {
-      id: 2,
-      title: 'Ai and Machine Learning',
-      subject: 'Computer Science',
-      dueDate: '5/15/2025',
-      progress: 20,
-      priority: 'medium',
-    },
-    {
-      id: 3,
-      title: 'Case Study: Market Entry Strategy',
-      subject: 'Business',
-      dueDate: '5/20/2025',
-      progress: 10,
-      priority: 'low',
-    },
+  const dueAssignments = assignments.map((assignment, index) => ({
+  id: index + 1,
+  title: assignment.assignmentTitle,
+  subject: assignment.subjectName,
+  dueDate: new Date(assignment.completionDate).toLocaleDateString('en-US'), // e.g., "6/26/2025"
+  progress: 0, // Set a default or calculate if you have logic
+  priority: assignment.priority,
+}));
 
-  ];
-
+console.log(dueAssignments);
   const subjects = [
     {
       id: 1,

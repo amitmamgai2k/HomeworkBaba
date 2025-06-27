@@ -203,6 +203,7 @@ const userSlice = createSlice({
       .addCase(fetchAssignments.fulfilled, (state, action) => {
         state.loading = false;
         state.assignments = action.payload;
+        console.log("Assignments fetched successfully:", action.payload);
         state.error = null;
       })
       .addCase(fetchAssignments.rejected, (state, action) => {
