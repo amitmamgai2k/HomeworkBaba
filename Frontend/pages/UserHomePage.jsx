@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ImageBackground, StatusBar, SafeAreaView, RefreshControl } from 'react-native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState,useContext } from 'react';
 import tw from '../tailwind';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -11,10 +11,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../context/UserContext';
 import { fetchAssignmentStatus } from '../Redux/Slices/userSlice';
 import { fetchAssignments } from '../Redux/Slices/userSlice';
+import { SocketContext } from '../socket.js';
+
 
 
 const UserHomePage = ({ navigation }) => {
   const { user } = useAuth();
+   const {socket} = useContext(SocketContext);
+   console.log('socket',socket);
+
   const uid = user?.uid;
   const [loading, setLoading] = useState(false);
 
@@ -72,7 +77,7 @@ const UserHomePage = ({ navigation }) => {
 
   }, []);
 
-  console.log('assignmentStatusAtHomePAge', assignments);
+
 
 
 
