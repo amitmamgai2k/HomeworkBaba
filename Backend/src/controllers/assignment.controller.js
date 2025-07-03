@@ -3,8 +3,7 @@ import uploadOnCloudinary from "../Helpers/cloudinary.js";
 import { Assignment } from "../models/assignment.model.js";
 import { User } from "../models/user.model.js";
 import { validationResult } from "express-validator";
-import { sendMessageToSocketId } from "../socket.js";
-
+import { sendMessageToSocketId } from "../../socket.js";
 export const createAssignment = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
