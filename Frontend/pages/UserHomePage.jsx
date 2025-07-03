@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl, ToastAndroid } from 'react-native';
-import React, { useCallback, useEffect, useState, useContext } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl, ToastAndroid, Animated, Modal } from 'react-native';
+import React, { useCallback, useEffect, useState, useContext, useRef } from 'react';
 import tw from '../tailwind';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -8,16 +8,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../context/UserContext';
 import { fetchAssignmentStatus, fetchAssignments } from '../Redux/Slices/userSlice';
-import { SocketContext } from '../socket.js';
+import { SocketContext } from '../context/SocketContext.js';
 
 const UserHomePage = ({ navigation }) => {
   const { user } = useAuth();
   const { socket } = useContext(SocketContext);
+
+
   const dispatch = useDispatch();
 
   const [userData, setUser] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showAll, setShowAll] = useState({ assignments: false, categories: false });
+
+  // Notification states
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notificationAnim = useRef(new Animated.Value(0)).current;
+  const badgeAnim = useRef(new Animated.Value(0)).current;
 
   const { assignmentStatus } = useSelector((state) => state.user);
   const assignments = useSelector((state) => state.user?.assignments || []);
@@ -50,14 +59,31 @@ const UserHomePage = ({ navigation }) => {
     socket?.emit("join", { userId: user?.uid });
     loadUserData();
     loadAssignments();
+    loadNotifications();
   }, [user?.uid]);
 
   useEffect(() => {
-   socket.on("assignmentCreated", (data) => {
-    ToastAndroid.show(data.message, ToastAndroid.SHORT);
-});
-});
 
+      socket.on("assignmentCreated", (data) => {
+        addNotification({
+          id: Date.now(),
+          title: "New Assignment Created",
+          message: data.message,
+          type: "assignment",
+          timestamp: new Date(),
+          read: false,
+          data: data
+        });
+        ToastAndroid.show(data.message, ToastAndroid.SHORT);
+      });
+
+
+      return () => {
+        socket.off("assignmentCreated");
+
+      };
+
+  }, [socket]);
 
   // Helper Functions
   const loadUserData = async () => {
@@ -81,6 +107,132 @@ const UserHomePage = ({ navigation }) => {
     }
   };
 
+  const loadNotifications = async () => {
+    try {
+      const storedNotifications = await AsyncStorage.getItem(`NOTIFICATIONS_${user?.uid}`);
+      if (storedNotifications) {
+        const parsed = JSON.parse(storedNotifications);
+        setNotifications(parsed);
+        setUnreadCount(parsed.filter(n => !n.read).length);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
+
+  const saveNotifications = async (newNotifications) => {
+    try {
+      await AsyncStorage.setItem(`NOTIFICATIONS_${user?.uid}`, JSON.stringify(newNotifications));
+    } catch (error) {
+      console.error('Error saving notifications:', error);
+    }
+  };
+
+  const addNotification = (notification) => {
+    setNotifications(prev => {
+      const updated = [notification, ...prev].slice(0, 50);
+      saveNotifications(updated);
+      return updated;
+    });
+
+    setUnreadCount(prev => prev + 1);
+
+    // Animate badge
+    Animated.sequence([
+      Animated.timing(badgeAnim, {
+        toValue: 1.2,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(badgeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      })
+    ]).start();
+  };
+
+  const markAsRead = (notificationId) => {
+    setNotifications(prev => {
+      const updated = prev.map(n =>
+        n.id === notificationId ? { ...n, read: true } : n
+      );
+      saveNotifications(updated);
+      return updated;
+    });
+
+    setUnreadCount(prev => Math.max(0, prev - 1));
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => {
+      const updated = prev.map(n => ({ ...n, read: true }));
+      saveNotifications(updated);
+      return updated;
+    });
+    setUnreadCount(0);
+  };
+
+  const deleteNotification = (notificationId) => {
+    setNotifications(prev => {
+      const notification = prev.find(n => n.id === notificationId);
+      const updated = prev.filter(n => n.id !== notificationId);
+      saveNotifications(updated);
+
+      if (notification && !notification.read) {
+        setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+      }
+
+      return updated;
+    });
+  };
+
+  const toggleNotifications = () => {
+    setShowNotifications(prev => !prev);
+    if (!showNotifications) {
+      Animated.timing(notificationAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(notificationAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'assignment': return 'book';
+      case 'update': return 'edit';
+      case 'deadline': return 'clock';
+      default: return 'bell';
+    }
+  };
+
+  const getNotificationColor = (type) => {
+    switch (type) {
+      case 'assignment': return '#8B5CF6';
+      case 'update': return '#10B981';
+      case 'deadline': return '#EF4444';
+      default: return '#6B7280';
+    }
+  };
+
+  const formatTime = (timestamp) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diff = now - time;
+
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return `${Math.floor(diff / 86400000)}d ago`;
+  };
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadAssignments().finally(() => setRefreshing(false));
@@ -102,6 +254,94 @@ const UserHomePage = ({ navigation }) => {
   }));
 
   // Component Renderers
+  const NotificationItem = ({ notification }) => (
+    <TouchableOpacity
+      style={[tw`p-4 border-b border-gray-100 flex-row`, !notification.read && tw`bg-violet-50`]}
+      onPress={() => markAsRead(notification.id)}
+    >
+      <View style={[tw`w-10 h-10 rounded-full items-center justify-center mr-3`, { backgroundColor: getNotificationColor(notification.type) + '20' }]}>
+        <MaterialIcons name={getNotificationIcon(notification.type)} size={20} color={getNotificationColor(notification.type)} />
+      </View>
+      <View style={tw`flex-1`}>
+        <Text style={[tw`font-semibold text-gray-800`, !notification.read && tw`text-violet-800`]}>
+          {notification.title}
+        </Text>
+        <Text style={tw`text-gray-600 text-sm mt-1`} numberOfLines={2}>
+          {notification.message}
+        </Text>
+        <Text style={tw`text-gray-400 text-xs mt-2`}>
+          {formatTime(notification.timestamp)}
+        </Text>
+      </View>
+      {!notification.read && (
+        <View style={tw`w-2 h-2 bg-violet-500 rounded-full mt-2`} />
+      )}
+      <TouchableOpacity
+        style={tw`p-1 ml-2`}
+        onPress={() => deleteNotification(notification.id)}
+      >
+        <MaterialIcons name="close" size={16} color="#9CA3AF" />
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
+
+  const NotificationDropdown = () => (
+    <Modal
+      visible={showNotifications}
+      transparent={true}
+      animationType="none"
+      onRequestClose={() => setShowNotifications(false)}
+    >
+      <TouchableOpacity
+        style={tw`flex-1 bg-black/20`}
+        activeOpacity={1}
+        onPress={() => setShowNotifications(false)}
+      >
+        <Animated.View
+          style={[
+            tw`absolute top-20 right-4 w-80 bg-white rounded-xl shadow-lg max-h-96`,
+            {
+              opacity: notificationAnim,
+              transform: [{
+                translateY: notificationAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-20, 0]
+                })
+              }]
+            }
+          ]}
+        >
+          {/* Header */}
+          <View style={tw`p-4 border-b border-gray-100 flex-row justify-between items-center`}>
+            <Text style={tw`font-bold text-lg text-gray-800`}>Notifications</Text>
+            <View style={tw`flex-row items-center`}>
+              <TouchableOpacity onPress={markAllAsRead} style={tw`mr-3`}>
+                <Text style={tw`text-violet-500 text-sm`}>Mark all read</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowNotifications(false)}>
+                <MaterialIcons name="close" size={20} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Notifications List */}
+          <ScrollView style={tw`max-h-80`} showsVerticalScrollIndicator={false}>
+            {notifications.length === 0 ? (
+              <View style={tw`p-8 items-center`}>
+                <MaterialIcons name="notifications-none" size={48} color="#D1D5DB" />
+                <Text style={tw`text-gray-500 mt-2`}>No notifications yet</Text>
+              </View>
+            ) : (
+              notifications.map(notification => (
+                <NotificationItem key={notification.id} notification={notification} />
+              ))
+            )}
+          </ScrollView>
+        </Animated.View>
+      </TouchableOpacity>
+    </Modal>
+  );
+
   const StatCard = ({ stat }) => (
     <TouchableOpacity style={tw`flex-1 bg-white/20 rounded-xl mx-1 p-4`}>
       <View style={[tw`w-10 h-10 rounded-lg justify-center items-center mb-2`, { backgroundColor: `${stat.color}30` }]}>
@@ -183,9 +423,23 @@ const UserHomePage = ({ navigation }) => {
                 <Text style={tw`text-white/90`}>{userName}</Text>
               </View>
             </View>
-            <TouchableOpacity style={tw`w-10 h-10 bg-white/20 rounded-full justify-center items-center`}>
+            <TouchableOpacity
+              style={tw`w-10 h-10 bg-white/20 rounded-full justify-center items-center`}
+              onPress={toggleNotifications}
+            >
               <Icon name="notifications" size={20} color="#fff" />
-              <View style={tw`absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full`} />
+              {unreadCount > 0 && (
+                <Animated.View
+                  style={[
+                    tw`absolute -top-1 -right-1 min-w-3 h-3 bg-red-500 rounded-full items-center justify-center px-1`,
+                    { transform: [{ scale: badgeAnim }] }
+                  ]}
+                >
+                  <Text style={tw`text-white text-xs font-bold`}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </Animated.View>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -235,6 +489,9 @@ const UserHomePage = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Notification Dropdown */}
+      <NotificationDropdown />
 
       {/* Bottom Navigation */}
       <View style={tw`absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-2`}>

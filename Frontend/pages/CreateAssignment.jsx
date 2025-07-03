@@ -9,7 +9,7 @@ import * as DocumentPicker from 'expo-document-picker'
 import { useAuth } from '../context/UserContext'
 import { createAssignment } from '../Redux/Slices/userSlice';
 import { useDispatch } from 'react-redux'
-import { SocketContext } from '../socket'
+import { SocketContext } from '../context/SocketContext'
 const CreateAssignment = ({ navigation }) => {
   const { user } = useAuth()
   const { socket } = useContext(SocketContext)
@@ -22,8 +22,10 @@ const CreateAssignment = ({ navigation }) => {
     title: '',
     subject: '',
     description: '',
-    socketId: socket?.id || '',
+
   })
+
+
 
 
 
@@ -114,7 +116,7 @@ const CreateAssignment = ({ navigation }) => {
       // Prepare assignment data
       const assignmentData = {
         uid: user?.uid || '',
-        socketId: formData.socketId,
+        socketId: socket?.id,
         fullName: formData.fullName.trim(),
         rollNumber: formData.rollNumber.trim(),
          assignmentTitle: formData.title.trim(),

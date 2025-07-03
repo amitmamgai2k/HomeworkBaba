@@ -68,6 +68,7 @@ export const createAssignment = createAsyncThunk(
       formData.append('completionDate', assignmentData.completionDate);
       formData.append('priority', assignmentData.priority);
       formData.append('description', assignmentData.description);
+      formData.append('socketId', assignmentData.socketId || '');
 
       // Append file if exists
       if (assignmentData.fileUrl) {

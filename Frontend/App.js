@@ -15,7 +15,7 @@ import UserProfile from "./pages/UserProfile";
 import MyAssignment from "./pages/MyAssignment";
 import { store } from "./Redux/store";
 import { Provider } from "react-redux";
-import SocketProvider from "./socket";
+import SocketProvider from "./context/SocketContext";
 
 
 const Stack = createNativeStackNavigator();
