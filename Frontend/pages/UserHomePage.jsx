@@ -35,7 +35,7 @@ const UserHomePage = ({ navigation }) => {
   const ASSIGNMENT_TYPES = [
     { id: 1, title: 'Essays', icon: 'edit', color: '#8B5CF6', count: 5 },
     { id: 2, title: 'Reports', icon: 'bar-chart', color: '#EC4899', count: 3 },
-    { id: 3, title: 'Presentations', icon: 'desktop', color: '#10B981', count: 2 },
+    { id: 3, title: 'Presentations', icon: 'laptop', color: '#10B981', count: 2 },
     { id: 4, title: 'Projects', icon: 'folder', color: '#F59E0B', count: 4 }
   ];
 

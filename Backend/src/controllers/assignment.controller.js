@@ -25,9 +25,11 @@ export const createAssignment = asyncHandler(async (req, res) => {
       description,
       socketId
     } = req.body;
+    console.log("Socket ID:", socketId || "Not provided");
+
 
     console.log("Creating assignment with data:", req.body);
-    console.log("File received:", req.file);
+
 
     // Validate required fields
     if(!uid || !fullName || !rollNumber || !assignmentTitle || !subjectName || !completionDate || !priority || !description || !socketId) {
