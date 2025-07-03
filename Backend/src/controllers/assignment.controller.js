@@ -4,6 +4,7 @@ import { Assignment } from "../models/assignment.model.js";
 import { User } from "../models/user.model.js";
 import { validationResult } from "express-validator";
 import { sendMessageToSocketId } from "../../socket.js";
+import { getIO } from "../../socket.js";
 export const createAssignment = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -229,6 +230,7 @@ export const deleteAssignment = asyncHandler(async (req, res) => {
       message: "Assignment deleted successfully",
       assignment: assignment,
     });
+
   } catch (error) {
     console.error("Error deleting assignment:", error);
     res.status(500).json({
@@ -236,4 +238,29 @@ export const deleteAssignment = asyncHandler(async (req, res) => {
       error: error.message,
     });
   }
+});
+export const markAssignmentCompleted = asyncHandler(async (req, res) => {
+  const { assignmentId } = req.params;
+  const { fileUrl } = req.body;
+
+  const assignment = await Assignment.findById(assignmentId);
+  if (!assignment  || assignment.status == "completed") {
+    return res.status(404).json({ message: "Assignment not found" });
+  }
+
+  assignment.status = "completed";
+  assignment.responseFile = fileUrl;
+  await assignment.save();
+
+  const io = getIO();
+  io.to(assignment.uid).emit("assignmentCompleted", {
+    message: " Your assignment has been reviewed!",
+    fileUrl: fileUrl,
+    assignmentId: assignment._id,
+  });
+
+  res.status(200).json({
+    message: "Assignment marked complete and user notified",
+    assignment,
+  });
 });

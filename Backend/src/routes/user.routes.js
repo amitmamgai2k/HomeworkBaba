@@ -2,9 +2,9 @@ import express from 'express';
 const router = express.Router();
 import { body } from 'express-validator';
 import { registerUser } from '../controllers/user.controller.js';
-import { createAssignment, getAssignments, getAssignmentStatus,deleteAssignment } from '../controllers/assignment.controller.js';
+import { createAssignment, getAssignments, getAssignmentStatus,deleteAssignment,markAssignmentCompleted } from '../controllers/assignment.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
-import { get } from 'http';
+
 
 router.post(
   '/register',[
@@ -24,6 +24,8 @@ router.post('/new-assignment', upload.single('fileUrl'), createAssignment);
 router.get('/get-assignments/:uid',getAssignments);
 router.get('/get-assignment-status/:uid',getAssignmentStatus);
 router.delete('/delete-assignment/:id', deleteAssignment);
+router.post('/mark-assignment-completed/:assignmentId', markAssignmentCompleted);
+
 
 export default router;
 

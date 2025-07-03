@@ -69,10 +69,24 @@ const MyAssignment = () => {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => dispatch(deleteAssignment(assignmentId))
+          onPress: () => {
+            dispatch(deleteAssignment(assignmentId))
+              .unwrap()
+              .then(() => {
+                navigator.navigate('UserHomePage');
+              })
+              .catch((error) => {
+                console.error('Error deleting assignment:', error);
+              });
+          }
         }
       ]
     );
+
+
+
+
+
   };
 
   const StatusBadge = ({ status }) => (

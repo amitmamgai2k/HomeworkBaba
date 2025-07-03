@@ -49,6 +49,10 @@ const UserHomePage = ({ navigation }) => {
   // Effects
   useEffect(() => {
     socket?.emit("join", { userId: user?.uid });
+    socket.on("assignmentCompleted", (data) => {
+  alert(data.message);
+  console.log("Completed file:", data.fileUrl);
+});
     loadUserData();
     loadAssignments();
   }, [user?.uid]);

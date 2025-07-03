@@ -23,6 +23,7 @@ export const initSocket = (server) => {
     });
   });
 };
+export const getIO = () => io;
 export const sendMessageToSocketId = (socketId, message) => {
     console.log(`Sending message to socketId: ${socketId} ,message: ${message}`);
 
