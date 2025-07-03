@@ -1,76 +1,56 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from '../tailwind';
 import { useAuth } from '../context/UserContext';
-import { fetchAssignments } from '../Redux/Slices/userSlice';
+import { fetchAssignments, deleteAssignment } from '../Redux/Slices/userSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
 const MyAssignment = () => {
   const { user } = useAuth();
-  const uid = user?.uid;
-
-
   const assignments = useSelector((state) => state.user?.assignments || []);
-
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
     const loadAssignments = async () => {
-      if (!uid) {
-        console.error("User ID is not available");
-        return;
-      }
+      if (!user?.uid) return;
       setLoading(true);
       try {
-        await dispatch(fetchAssignments({uid:uid})).unwrap();
+        await dispatch(fetchAssignments({ uid: user.uid })).unwrap();
       } catch (error) {
         console.error("Error fetching assignments:", error);
       }
       setLoading(false);
     };
-
     loadAssignments();
-  }, [uid, dispatch]);
+  }, [user?.uid, dispatch]);
 
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
-      case 'high':
-        return 'bg-red-300 text-red-700';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'high': return '#EF4444';
+      case 'medium': return '#F59E0B';
+      case 'low': return '#10B981';
+      default: return '#6B7280';
     }
   };
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'completed': return '#10B981';
+      case 'pending': return '#F59E0B';
+      case 'overdue': return '#EF4444';
+      default: return '#6B7280';
     }
   };
 
-  const isOverdue = (completionDate) => {
-    return new Date(completionDate) < new Date();
-  };
+  const isOverdue = (date) => new Date(date) < new Date();
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric'
     });
   };
 
@@ -80,114 +60,167 @@ const MyAssignment = () => {
     }
   };
 
-  return (
-    <SafeAreaView style={tw`flex-1 bg-violet-50`}>
-      <ScrollView contentContainerStyle={tw`p-4`}>
-        <View>
-          {loading ? (
-            <Text style={tw`text-center text-lg text-gray-700`}>Loading assignments...</Text>
-          ) : (
-            <View>
-              <Text style={tw`text-2xl font-bold mb-4 text-center text-violet-800`}>My Assignments</Text>
-              {assignments.length > 0 ? (
-                assignments.map((assignment, index) => (
-                  <View
-                    key={assignment._id || index}
-                    style={tw`mb-4 p-4 border-2 border-white rounded-lg shadow-lg bg-violet-200`}
-                  >
-                    {/* Header Row */}
-                    <View style={tw`flex flex-row justify-between items-center mb-3`}>
-                      <Text style={tw`text-xs text-gray-600 font-mono`}>
-                        ID: {assignment._id}
-                      </Text>
-                      <View style={tw`px-2 py-1 rounded-full ${getPriorityColor(assignment.priority)}`}>
-                        <Text style={tw`text-xs font-semibold capitalize`}>
-                          {assignment.priority}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={tw`flex flex-row justify-between items-center mb-3`}>
-                      <Text style={tw`text-lg font-bold text-black mb-2 `}>
-                      {assignment.assignmentTitle}
-                    </Text>
-                      <View style={tw`px-2 py-1 rounded-full ${getStatusColor(assignment.status)}`}>
-                        <Text style={tw`text-xs font-semibold capitalize`}>
-                          {assignment.status}
-                        </Text>
-                      </View>
-                    </View>
+  const handleDelete = (assignmentId, title) => {
+    Alert.alert(
+      'Delete Assignment',
+      `Are you sure you want to delete "${title}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => dispatch(deleteAssignment(assignmentId))
+        }
+      ]
+    );
+  };
 
-                    {/* Assignment Title */}
+  const StatusBadge = ({ status }) => (
+    <View style={[tw`px-3 py-1 rounded-full`, { backgroundColor: getStatusColor(status) + '20' }]}>
+      <Text style={[tw`text-xs font-bold`, { color: getStatusColor(status) }]}>
+        {status?.toUpperCase()}
+      </Text>
+    </View>
+  );
 
+  const PriorityBadge = ({ priority }) => (
+    <View style={[tw`px-3 py-1 rounded-full`, { backgroundColor: getPriorityColor(priority) + '20' }]}>
+      <Text style={[tw`text-xs font-bold`, { color: getPriorityColor(priority) }]}>
+        {priority?.toUpperCase()}
+      </Text>
+    </View>
+  );
 
-                    {/* Subject and Student Info */}
-                    <View style={tw`flex flex-row justify-between mb-2`}>
-                      <Text style={tw`text-gray-700 font-semibold`}>
-                        Subject: <Text style={tw`font-normal`}>{assignment.subjectName}</Text>
-                      </Text>
-                      <Text style={tw`text-gray-700 font-semibold`}>
-                        Roll Number: <Text style={tw`font-normal`}>{assignment.rollNumber}</Text>
-                      </Text>
-                    </View>
-
-                    {/* Student Name */}
-                    <Text style={tw`text-gray-700 font-semibold mb-2`}>
-                      Name: <Text style={tw`font-normal`}>{assignment.fullName}</Text>
-                    </Text>
-
-                    {/* Due Date */}
-                    <View style={tw`mb-2`}>
-                      <Text style={tw`text-gray-700 font-semibold`}>
-                        Due Date:
-                        <Text style={tw`font-normal ${isOverdue(assignment.completionDate) ? 'text-red-600' : 'text-gray-700'}`}>
-                          {' '}{formatDate(assignment.completionDate)}
-                        </Text>
-                        {isOverdue(assignment.completionDate) && (
-                          <Text style={tw`text-red-600 font-bold`}> (OVERDUE)</Text>
-                        )}
-                      </Text>
-                    </View>
-
-                    {/* Description */}
-                    <Text style={tw`text-gray-700 font-semibold mb-2`}>
-                      Description:
-                    </Text>
-                    <Text style={tw`text-gray-600 mb-3 leading-5`}>
-                      {assignment.description}
-                    </Text>
-
-                    {/* File Attachment */}
-                    {assignment.fileUrl && (
-                      <TouchableOpacity
-                        onPress={() => handleFilePress(assignment.fileUrl)}
-                        style={tw`bg-violet-600 px-3 py-2 rounded-md mb-2`}
-                      >
-                        <Text style={tw`text-white text-center font-semibold`}>
-                          📎 View Attachment
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-
-                    {/* Created Date */}
-                    <Text style={tw`text-xs text-gray-500 mt-2`}>
-                      Created: {formatDate(assignment.createdAt)}
-                    </Text>
-                  </View>
-                ))
-              ) : (
-                <View style={tw`flex items-center justify-center py-10`}>
-                  <Text style={tw`text-center text-gray-700 text-lg mb-2`}>📋</Text>
-                  <Text style={tw`text-center text-gray-700`}>No assignments found.</Text>
-                </View>
-              )}
-            </View>
-          )}
+  const AssignmentCard = ({ assignment }) => (
+    <View style={tw`bg-white rounded-xl p-5 mb-4 shadow-sm border border-gray-100`}>
+      {/* Header */}
+      <View style={tw`flex-row justify-between items-start mb-3`}>
+        <View style={tw`flex-1 mr-3`}>
+          <Text style={tw`text-xs text-gray-500 font-medium mb-1`}>ASSIGNMENT TITLE</Text>
+          <Text style={tw`text-lg font-bold text-gray-800 mb-1`}>{assignment.assignmentTitle}</Text>
+          <View style={tw`flex-row items-center`}>
+            <Text style={tw`text-xs text-gray-500 font-medium mr-2`}>SUBJECT:</Text>
+            <Text style={tw`text-violet-600 font-medium`}>{assignment.subjectName}</Text>
+          </View>
         </View>
+        <TouchableOpacity
+          onPress={() => handleDelete(assignment._id)}
+          style={tw`p-2 bg-red-50 rounded-lg`}
+        >
+          <Icon name="delete-outline" size={20} color="#EF4444" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Status & Priority */}
+      <View style={tw`flex-row justify-between items-center mb-4`}>
+        <View>
+          <Text style={tw`text-xs text-gray-500 font-medium mb-1`}>STATUS</Text>
+          <StatusBadge status={assignment.status} />
+        </View>
+        <View>
+          <Text style={tw`text-xs text-gray-500 font-medium mb-1`}>PRIORITY</Text>
+          <PriorityBadge priority={assignment.priority} />
+        </View>
+      </View>
+
+      {/* Info Grid */}
+      <View style={tw`mb-4 space-y-2`}>
+        <View style={tw`flex-row justify-between`}>
+          <View style={tw`flex-1 mr-2`}>
+            <Text style={tw`text-xs text-gray-500 font-medium`}>STUDENT NAME</Text>
+            <Text style={tw`text-gray-800 font-medium`}>{assignment.fullName}</Text>
+          </View>
+          <View>
+            <Text style={tw`text-xs text-gray-500 font-medium`}>ROLL NUMBER</Text>
+            <Text style={tw`text-gray-800 font-medium`}>{assignment.rollNumber}</Text>
+          </View>
+        </View>
+
+        <View>
+          <Text style={tw`text-xs text-gray-500 font-medium mb-1`}>DUE DATE</Text>
+          <View style={tw`flex-row items-center`}>
+            <Icon name="schedule" size={16} color={isOverdue(assignment.completionDate) ? '#EF4444' : '#6B7280'} />
+            <Text style={[tw`text-sm ml-1 font-medium`, isOverdue(assignment.completionDate) ? tw`text-red-600` : tw`text-gray-700`]}>
+              {formatDate(assignment.completionDate)}
+              {isOverdue(assignment.completionDate) && ' (OVERDUE)'}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Description */}
+      {assignment.description && (
+        <View style={tw`mb-4`}>
+          <Text style={tw`text-xs text-gray-500 font-medium mb-2`}>DESCRIPTION</Text>
+          <Text style={tw`text-gray-700 leading-5`}>{assignment.description}</Text>
+        </View>
+      )}
+
+      {/* Actions */}
+      <View style={tw`pt-3 border-t border-gray-100`}>
+        {assignment.fileUrl && (
+          <View style={tw`mb-3`}>
+            <Text style={tw`text-xs text-gray-500 font-medium mb-2`}>ATTACHMENT</Text>
+            <TouchableOpacity
+              onPress={() => handleFilePress(assignment.fileUrl)}
+              style={tw`flex-row items-center bg-violet-100 px-4 py-3 rounded-lg`}
+            >
+              <AntDesign name="paperclip" size={16} color="#8B5CF6" />
+              <Text style={tw`text-violet-700 font-medium ml-2`}>View Attached File</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <View style={tw`flex-row justify-between items-center`}>
+          <View>
+            <Text style={tw`text-xs text-gray-500 font-medium`}>CREATED</Text>
+            <Text style={tw`text-xs text-gray-600`}>
+              {formatDate(assignment.createdAt)}
+            </Text>
+          </View>
+          <View>
+            <Text style={tw`text-xs text-gray-500 font-medium`}>ID</Text>
+            <Text style={tw`text-xs text-gray-600 font-mono`}>
+              {assignment._id?.slice(-8)}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={tw`flex-1 bg-gray-50 justify-center items-center`}>
+        <Text style={tw`text-gray-600 text-lg`}>Loading assignments...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+      {/* Header */}
+      <View style={tw`bg-violet-600 px-6 pt-4 pb-6 rounded-b-3xl`}>
+        <Text style={tw`text-2xl font-bold text-white text-center`}>My Assignments</Text>
+        <Text style={tw`text-violet-200 text-center mt-1`}>{assignments.length} assignments</Text>
+      </View>
+
+      <ScrollView style={tw`flex-1 px-4 -mt-2`} showsVerticalScrollIndicator={false}>
+        {assignments.length > 0 ? (
+          assignments.map((assignment, index) => (
+            <AssignmentCard key={assignment._id || index} assignment={assignment} />
+          ))
+        ) : (
+          <View style={tw`bg-white rounded-xl p-8 mt-4 items-center`}>
+            <Icon name="assignment" size={48} color="#D1D5DB" />
+            <Text style={tw`text-gray-500 text-lg mt-3`}>No assignments found</Text>
+            <Text style={tw`text-gray-400 text-center mt-1`}>Your assignments will appear here</Text>
+          </View>
+        )}
+        <View style={tw`h-4`} />
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 export default MyAssignment;
-
-const styles = StyleSheet.create({});

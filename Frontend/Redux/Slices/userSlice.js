@@ -154,7 +154,32 @@ export const fetchAssignmentStatus = createAsyncThunk(
     }
   }
   );
+  export const deleteAssignment = createAsyncThunk(
+  "user/deleteAssignment",
+  async (id, { rejectWithValue }) => {
+    try {
+      const currentUser = auth.currentUser;
+      const idToken = await currentUser.getIdToken();
 
+      const response = await axiosInstance.delete(`/users/delete-assignment/${id}`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting assignment:", error);
+      if (error.response) {
+        return rejectWithValue(error.response.data);
+      } else if (error.request) {
+        return rejectWithValue({ message: "Network error - no response from server" });
+      } else {
+        return rejectWithValue({ message: error.message });
+      }
+    }
+  }
+);
 
 const userSlice = createSlice({
   name: "user",
@@ -225,7 +250,19 @@ const userSlice = createSlice({
       .addCase(fetchAssignmentStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || { message: "Failed to fetch assignment status" };
-      });
+      })
+      .addCase(deleteAssignment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteAssignment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.assignments = state.assignments.filter(
+          (assignment) => assignment._id !== action.payload.id
+        );
+        state.error = null;
+        ToastAndroid.show("Assignment deleted successfully", ToastAndroid.SHORT);
+      })
   },
 });
 

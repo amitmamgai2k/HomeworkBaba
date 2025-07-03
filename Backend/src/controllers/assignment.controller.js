@@ -206,3 +206,34 @@ export const getAssignmentStatus = asyncHandler(async (req, res) => {
     });
   }
 });
+
+export const deleteAssignment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({
+      message: "Assignment ID is required",
+    });
+  }
+
+  try {
+    const assignment = await Assignment.findByIdAndDelete(id);
+
+    if (!assignment) {
+      return res.status(404).json({
+        message: "Assignment not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Assignment deleted successfully",
+      assignment: assignment,
+    });
+  } catch (error) {
+    console.error("Error deleting assignment:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
