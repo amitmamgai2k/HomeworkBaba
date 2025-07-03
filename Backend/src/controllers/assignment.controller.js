@@ -77,11 +77,18 @@ export const createAssignment = asyncHandler(async (req, res) => {
       message: "Assignment created successfully",
       assignment: newAssignment,
     });
-    sendMessageToSocketId(socketId, {
+  sendMessageToSocketId(socketId, {
   event: "assignmentCreated",
-  data: {
-    message: "🎉 New Assignment Successfully Submitted"
-  },
+  title: "Assignment Submitted Successfully",
+  message: `🎉 Your assignment "${assignmentTitle}" for ${subjectName} has been created`,
+  type: "assignment",
+  assignmentData: {
+    id: newAssignment._id,
+    title: assignmentTitle,
+    subject: subjectName,
+    dueDate: completionDate,
+    priority: priority
+  }
 });
 
   } catch (error) {
