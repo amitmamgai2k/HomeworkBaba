@@ -1,5 +1,5 @@
 import { ScrollView, Text, TextInput, ToastAndroid, TouchableOpacity, View, Alert } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState ,useContext} from 'react'
 import tw from '../tailwind'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import DateTimePicker from '@react-native-community/datetimepicker'
@@ -9,9 +9,10 @@ import * as DocumentPicker from 'expo-document-picker'
 import { useAuth } from '../context/UserContext'
 import { createAssignment } from '../Redux/Slices/userSlice';
 import { useDispatch } from 'react-redux'
-
+import { SocketContext } from '../socket'
 const CreateAssignment = ({ navigation }) => {
   const { user } = useAuth()
+  const { socket } = useContext(SocketContext)
   const dispatch = useDispatch()
 
   // Form state
@@ -21,7 +22,10 @@ const CreateAssignment = ({ navigation }) => {
     title: '',
     subject: '',
     description: '',
+    socketId: socket?.id || '',
   })
+
+
 
   // Separate states for complex fields
   const [completionDate, setCompletionDate] = useState(new Date())
@@ -110,6 +114,7 @@ const CreateAssignment = ({ navigation }) => {
       // Prepare assignment data
       const assignmentData = {
         uid: user?.uid || '',
+        socketId: formData.socketId,
         fullName: formData.fullName.trim(),
         rollNumber: formData.rollNumber.trim(),
          assignmentTitle: formData.title.trim(),
@@ -118,14 +123,13 @@ const CreateAssignment = ({ navigation }) => {
         priority: priority,
         description: formData.description.trim(),
         fileUrl: selectedFile,
-        // createdAt: new Date().toISOString(),
-        // status: 'pending'
+
       }
 
-      // TODO: Replace with actual API call
+
       await dispatch(createAssignment(assignmentData))
 
-      // Simulate API call
+
       await new Promise(resolve => setTimeout(resolve, 1000))
 
       ToastAndroid.show('Assignment created successfully!', ToastAndroid.SHORT)

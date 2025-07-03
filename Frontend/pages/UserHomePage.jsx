@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl, ToastAndroid } from 'react-native';
 import React, { useCallback, useEffect, useState, useContext } from 'react';
 import tw from '../tailwind';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -53,10 +53,11 @@ const UserHomePage = ({ navigation }) => {
   }, [user?.uid]);
 
   useEffect(() => {
-    socket.on("serverMessage", (data) => {
-  console.log("Message from server:", data.text);
+   socket.on("assignmentCreated", (data) => {
+    ToastAndroid.show(data.message, ToastAndroid.SHORT);
 });
-  })
+});
+
 
   // Helper Functions
   const loadUserData = async () => {
