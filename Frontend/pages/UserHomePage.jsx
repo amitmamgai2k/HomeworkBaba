@@ -52,6 +52,12 @@ const UserHomePage = ({ navigation }) => {
     loadAssignments();
   }, [user?.uid]);
 
+  useEffect(() => {
+    socket.on("serverMessage", (data) => {
+  console.log("Message from server:", data.text);
+});
+  })
+
   // Helper Functions
   const loadUserData = async () => {
     try {

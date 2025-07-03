@@ -15,6 +15,8 @@ export const initSocket = (server) => {
       socket.join(room);
       console.log(`User ${socket.id} joined room: ${room}`);
     });
+     socket.emit("serverMessage", { text: "Hello from server!" });
+
 
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
