@@ -1,533 +1,255 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ImageBackground, StatusBar, SafeAreaView, RefreshControl } from 'react-native';
-import React, { useCallback, useEffect, useState,useContext } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl } from 'react-native';
+import React, { useCallback, useEffect, useState, useContext } from 'react';
 import tw from '../tailwind';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuth } from '../context/UserContext';
-import { fetchAssignmentStatus } from '../Redux/Slices/userSlice';
-import { fetchAssignments } from '../Redux/Slices/userSlice';
+import { fetchAssignmentStatus, fetchAssignments } from '../Redux/Slices/userSlice';
 import { SocketContext } from '../socket.js';
-
-
 
 const UserHomePage = ({ navigation }) => {
   const { user } = useAuth();
-   const {socket} = useContext(SocketContext);
-   console.log('socket',socket);
+  const { socket } = useContext(SocketContext);
+  const dispatch = useDispatch();
 
-  const uid = user?.uid;
-  const [loading, setLoading] = useState(false);
+  const [userData, setUser] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showAll, setShowAll] = useState({ assignments: false, categories: false });
 
- const [userData, setUser] = useState(null);
- const [refreshing, setRefreshing] = useState(false);
- const dispatch = useDispatch();
- const { assignmentStatus } = useSelector((state) => state.user);
- const assignments = useSelector((state) => state.user?.assignments || []);
+  const { assignmentStatus } = useSelector((state) => state.user);
+  const assignments = useSelector((state) => state.user?.assignments || []);
 
+  // Data Configuration
+  const CATEGORIES = [
+    { id: 1, title: 'Coding', icon: 'code', color: '#8B5CF6' },
+    { id: 2, title: 'Mathematics', icon: 'calculate', color: '#EC4899' },
+    { id: 3, title: 'Science', icon: 'science', color: '#10B981' },
+    { id: 4, title: 'Literature', icon: 'book', color: '#F59E0B' },
+    { id: 5, title: 'History', icon: 'public', color: '#3B82F6' },
+    { id: 6, title: 'Art & Design', icon: 'palette', color: '#6366F1' }
+  ];
 
+  const ASSIGNMENT_TYPES = [
+    { id: 1, title: 'Essays', icon: 'edit', color: '#8B5CF6', count: 5 },
+    { id: 2, title: 'Reports', icon: 'bar-chart', color: '#EC4899', count: 3 },
+    { id: 3, title: 'Presentations', icon: 'desktop', color: '#10B981', count: 2 },
+    { id: 4, title: 'Projects', icon: 'folder', color: '#F59E0B', count: 4 }
+  ];
 
+  const STATS = [
+    { key: 'overdue', label: 'Overdue', icon: 'exclamationcircle', color: '#EF4444' },
+    { key: 'pending', label: 'Pending', icon: 'clockcircle', color: '#F59E0B' },
+    { key: 'completed', label: 'Completed', icon: 'checkcircle', color: '#10B981' }
+  ];
+
+  // Effects
   useEffect(() => {
-    const getUserData = async () => {
-      try {
-        const userData = await AsyncStorage.getItem('USER_DATA');
-        if (userData !== null) {
-          setUser(JSON.parse(userData));
-        } else {
-          console.log('No user data found');
-        }
-      } catch (error) {
-        console.error('Error retrieving data', error);
-      }
-    };
-
-
-    getUserData();
-
-  }, []);
-   useEffect(() => {
-    const loadAssignments = async () => {
-      if (!uid) {
-        console.error("User ID is not available");
-        return;
-      }
-      setLoading(true);
-      try {
-        await dispatch(fetchAssignmentStatus(uid)).unwrap();
-        await dispatch(fetchAssignments({uid:uid, status:'overdue'})).unwrap();
-      } catch (error) {
-        console.error("Error fetching assignments:", error);
-      }
-      setLoading(false);
-    };
-
+    socket?.emit("join", { userId: user?.uid });
+    loadUserData();
     loadAssignments();
-  }, [uid, dispatch]);
+  }, [user?.uid]);
 
+  // Helper Functions
+  const loadUserData = async () => {
+    try {
+      const data = await AsyncStorage.getItem('USER_DATA');
+      if (data) setUser(JSON.parse(data));
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  const loadAssignments = async () => {
+    if (!user?.uid) return;
+    try {
+      await Promise.all([
+        dispatch(fetchAssignmentStatus(user.uid)).unwrap(),
+        dispatch(fetchAssignments({ uid: user.uid, status: 'overdue' })).unwrap()
+      ]);
+    } catch (error) {
+      console.error('Error loading assignments:', error);
+    }
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
-
+    loadAssignments().finally(() => setRefreshing(false));
   }, []);
 
-
-
-
-
-
-
-  const userName = userData ? userData.name : 'User';
-  const currentTime = new Date().getHours();
-  let greeting = 'Good Morning';
-
-
-
-  if (currentTime >= 12 && currentTime < 17) {
-    greeting = 'Good Afternoon';
-  } else if (currentTime >= 17) {
-    greeting = 'Good Evening';
-  }
-
-
-  const dueAssignments = assignments.map((assignment, index) => ({
-  id: index + 1,
-  title: assignment.assignmentTitle,
-  subject: assignment.subjectName,
-  dueDate: new Date(assignment.completionDate).toLocaleDateString('en-US'), // e.g., "6/26/2025"
-  progress: 0, // Set a default or calculate if you have logic
-  priority: assignment.priority,
-}));
-
-console.log(dueAssignments);
-  const subjects = [
-    {
-      id: 1,
-      title: 'College Assignments',
-      icon: 'edit',
-      color: '#8B5CF6', // violet-500
-      description: 'General assignments and projects',
-      count: 5
-    },
-    {
-      id: 2,
-      title: 'Reports',
-      icon: 'bar-chart',
-      color: '#EC4899', // pink-500
-      description: 'Technical and experimental reports',
-      count: 3
-    },
-    {
-      id: 3,
-      title: 'Case Studies',
-      icon: 'folder',
-      color: '#F59E0B', // amber-500
-      description: 'In-depth analysis of specific topics',
-      count: 2
-    },
-    {
-      id: 4,
-      title: 'Reviews',
-      icon: 'star',
-      color: '#10B981', // emerald-500
-      description: 'Literature and article reviews',
-      count: 4
-    },
-    {
-      id: 5,
-      title: 'Presentations',
-      icon: 'desktop',
-      color: '#3B82F6', // blue-500
-      description: 'Slideshows and visual presentations',
-      count: 1
-    },
-    {
-      id: 6,
-      title: 'Hand Written Notes',
-      icon: 'pencil',
-      color: '#8B5CF6', // violet-500
-      description: 'Detailed notes and summaries',
-      count: 0
-
-    },
-  ];
-
-
-  const categories = [
-    {
-      id: 1,
-      title: 'Coding',
-      icon: 'code',
-      color: '#259F2C', // violet-500
-
-    },
-    {
-      id: 2,
-      title: 'Maths',
-      icon: 'calculate',
-      color: '#EC4899', // pink-500
-
-    },
-    {
-      id: 3,
-      title: 'History',
-      icon: 'book',
-      color: '#F59E0B', // amber-500
-
-    },
-    {
-      id: 4,
-      title: 'English',
-      icon: 'language',
-      color: '#10B981', // emerald-500
-
-    },
-    {
-      id: 5,
-      title: 'Physics',
-      icon: 'science',
-      color: '#3B82F6', // blue-500
-
-    },
-    {
-      id: 6,
-      title: 'Chemistry',
-      icon: 'biotech',
-      color: '#6366F1', // indigo-500
-
-    },
-    {
-      id: 7,
-      title: 'Biology',
-      icon: 'pets',
-      color: '#34D399', // green-400
-
-    },
-    {
-      id: 8,
-      title: 'Geography',
-      icon: 'public',
-      color: '#60A5FA', // blue-400
-
-    },
-    {
-      id: 9,
-      title: 'Economics',
-      icon: 'trending-up',
-      color: '#F87171', // red-400
-
-    },
-  ];
-
-
-
-
-  const [selectedCategory, setSelectedCategory] = useState(null);
-const [showAllDueAssignments, setShowAllDueAssignments] = useState(false);
-  const displayedDueAssignments = showAllDueAssignments ? dueAssignments : dueAssignments.slice(0, 2);
-  const [showAllSubjects, setShowAllSubjects] = useState(false);
-  const displayedSubjects = showAllSubjects ? subjects : subjects.slice(0, 4);
-
-  // Function to render priority indicator
-  const renderPriorityBadge = (priority) => {
-    const colors = {
-      high: 'bg-red-100 text-red-600',
-      medium: 'bg-orange-100 text-orange-600',
-      low: 'bg-blue-100 text-blue-600'
-    };
-
-    return (
-      <View style={tw`${colors[priority].split(' ')[0]} px-2 py-1 rounded-full`}>
-        <Text style={tw`${colors[priority].split(' ')[1]} text-xs font-bold uppercase`}>{priority}</Text>
-      </View>
-    );
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
   };
 
-  return (
-    <SafeAreaView style={tw`flex-1 bg-gray-50 `}>
+  const formatAssignments = () => assignments.map((assignment, index) => ({
+    id: index + 1,
+    title: assignment.assignmentTitle,
+    subject: assignment.subjectName,
+    dueDate: new Date(assignment.completionDate).toLocaleDateString(),
+    priority: assignment.priority
+  }));
 
+  // Component Renderers
+  const StatCard = ({ stat }) => (
+    <TouchableOpacity style={tw`flex-1 bg-white/20 rounded-xl mx-1 p-4`}>
+      <View style={[tw`w-10 h-10 rounded-lg justify-center items-center mb-2`, { backgroundColor: `${stat.color}30` }]}>
+        <AntDesign name={stat.icon} size={20} color="#fff" />
+      </View>
+      <Text style={tw`text-white text-2xl font-bold`}>{assignmentStatus?.[stat.key] || 0}</Text>
+      <Text style={tw`text-white/90 text-sm`}>{stat.label}</Text>
+    </TouchableOpacity>
+  );
 
-
-      <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={tw`pb-24`}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh}  />
-      }
+  const CategoryChip = ({ category }) => (
+    <TouchableOpacity
+      style={[tw`mr-3 px-4 py-2 rounded-full flex-row items-center`, { backgroundColor: category.color }]}
     >
+      <MaterialIcons name={category.icon} size={16} color="#fff" />
+      <Text style={tw`text-white font-medium ml-2 text-sm`}>{category.title}</Text>
+    </TouchableOpacity>
+  );
+
+  const AssignmentCard = ({ assignment }) => (
+    <TouchableOpacity style={tw`bg-white rounded-xl p-4 mb-3 shadow-sm`}>
+      <View style={tw`flex-row items-center justify-between mb-2`}>
+        <Text style={tw`text-gray-800 font-bold flex-1`} numberOfLines={1}>
+          {assignment.title}
+        </Text>
+        <View style={[tw`px-2 py-1 rounded-full`, { backgroundColor: assignment.priority === 'high' ? '#FEE2E2' : assignment.priority === 'medium' ? '#FEF3C7' : '#DBEAFE' }]}>
+          <Text style={[tw`text-xs font-bold`, { color: assignment.priority === 'high' ? '#DC2626' : assignment.priority === 'medium' ? '#D97706' : '#2563EB' }]}>
+            {assignment.priority?.toUpperCase()}
+          </Text>
+        </View>
+      </View>
+      <View style={tw`flex-row items-center justify-between`}>
+        <Text style={tw`text-gray-500 text-sm`}>{assignment.subject}</Text>
+        <Text style={tw`text-gray-400 text-xs`}>Due: {assignment.dueDate}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const TypeCard = ({ type }) => (
+    <TouchableOpacity style={tw`bg-white rounded-xl p-4 w-[48%] mb-3 shadow-sm`}>
+      <View style={[tw`w-10 h-10 rounded-lg items-center justify-center mb-3`, { backgroundColor: `${type.color}20` }]}>
+        <MaterialIcons name={type.icon} size={20} color={type.color} />
+      </View>
+      <Text style={tw`text-gray-800 font-bold mb-1`}>{type.title}</Text>
+      <Text style={tw`text-gray-500 text-xs`}>{type.count} items</Text>
+    </TouchableOpacity>
+  );
+
+  const NavButton = ({ icon, label, onPress, active = false }) => (
+    <TouchableOpacity style={tw`flex-1 items-center py-3`} onPress={onPress}>
+      <View style={[tw`p-2 rounded-xl mb-1`, active ? tw`bg-violet-500` : tw`bg-gray-100`]}>
+        <AntDesign name={icon} size={20} color={active ? "#fff" : "#6B7280"} />
+      </View>
+      <Text style={[tw`text-xs font-medium`, active ? tw`text-violet-600` : tw`text-gray-500`]}>{label}</Text>
+    </TouchableOpacity>
+  );
+
+  const userName = userData?.name || 'User';
+  const dueAssignments = formatAssignments();
+  const displayedAssignments = showAll.assignments ? dueAssignments : dueAssignments.slice(0, 3);
+  const displayedTypes = showAll.categories ? ASSIGNMENT_TYPES : ASSIGNMENT_TYPES.slice(0, 4);
+
+  return (
+    <SafeAreaView style={tw`flex-1 bg-gray-50`}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={tw`pb-24`}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         {/* Header */}
         <View style={[tw`px-5 pt-6 pb-6 rounded-b-3xl`, styles.headerGradient]}>
-          <View style={tw`flex flex-row justify-between items-center mb-4`}>
-            <View style={tw`flex flex-row items-center`}>
-              <View style={tw`h-10 w-10 bg-white rounded-full justify-center items-center mr-3 shadow-sm`}>
-                <Text style={tw`text-violet-500 font-bold text-xl`}>{userName.charAt(0)}</Text>
+          <View style={tw`flex-row justify-between items-center mb-6`}>
+            <View style={tw`flex-row items-center`}>
+              <View style={tw`w-12 h-12 bg-white rounded-full justify-center items-center mr-3`}>
+                <Text style={tw`text-violet-500 font-bold text-lg`}>{userName.charAt(0)}</Text>
               </View>
               <View>
-                <Text style={tw`text-2xl font-bold text-white`}>Hello, {userName}</Text>
-                <Text style={tw`text-white text-opacity-90 text-lg`}>{greeting}</Text>
+                <Text style={tw`text-xl font-bold text-white`}>{getGreeting()}</Text>
+                <Text style={tw`text-white/90`}>{userName}</Text>
               </View>
             </View>
-            <View style={tw`flex flex-row`}>
-              <TouchableOpacity style={tw`w-10 h-10 bg-white bg-opacity-20 rounded-full justify-center items-center relative`}>
-                <Icon name="notifications" size={22} color="#fff" />
-                <View style={tw`absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border border-white`}></View>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={tw`w-10 h-10 bg-white/20 rounded-full justify-center items-center`}>
+              <Icon name="notifications" size={20} color="#fff" />
+              <View style={tw`absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full`} />
+            </TouchableOpacity>
           </View>
 
-          {/* Assignment stats */}
-          <View style={tw`flex flex-row justify-between`}>
-             <TouchableOpacity style={tw`h-30 flex-1 bg-white bg-opacity-20 rounded-2xl mr-3 p-4 justify-between`}>
-              <View style={tw`w-10 h-10 bg-white bg-opacity-20 rounded-lg justify-center items-center`}>
-                <AntDesign name="exclamationcircle" size={20} color="#fff" />
-              </View>
-              <View>
-                <Text style={tw`text-white text-3xl font-bold`}>{assignmentStatus?.overdue}</Text>
-                <Text style={tw`text-white`}>Overdue</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity style={tw`h-30 flex-1 bg-white bg-opacity-20 rounded-2xl mr-3 p-4 justify-between`}>
-              <View style={tw`w-10 h-10 bg-white bg-opacity-20 rounded-lg justify-center items-center`}>
-                <AntDesign name="clockcircle" size={20} color="#fff" />
-              </View>
-              <View>
-                <Text style={tw`text-white text-3xl font-bold`}>{assignmentStatus?.pending}</Text>
-                <Text style={tw`text-white`}>Pending</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity style={tw`h-30 flex-1 bg-white bg-opacity-20 rounded-2xl p-4 justify-between`}>
-              <View style={tw`w-10 h-10 bg-white bg-opacity-20 rounded-lg justify-center items-center`}>
-                <AntDesign name="checkcircle" size={20} color="#fff" />
-              </View>
-              <View>
-                <Text style={tw`text-white text-3xl font-bold`}>{assignmentStatus?.completed}</Text>
-                <Text style={tw`text-white`}>Completed</Text>
-              </View>
-            </TouchableOpacity>
+          {/* Stats */}
+          <View style={tw`flex-row justify-between`}>
+            {STATS.map(stat => <StatCard key={stat.key} stat={stat} />)}
           </View>
         </View>
 
-        {/* Add Assignments */}
+        {/* Quick Actions */}
         <View style={tw`px-5 mt-6`}>
           <TouchableOpacity
-            style={tw`bg-violet-600 py-4 rounded-2xl flex flex-row justify-center items-center shadow-sm`}
+            style={tw`bg-violet-600 py-4 rounded-xl flex-row justify-center items-center`}
             onPress={() => navigation.navigate('CreateAssignment')}
           >
-            <AntDesign name="plus" size={20} color="#fff" />
-            <Text style={tw`text-white font-bold ml-2 text-lg`}>Add New Assignment</Text>
+            <AntDesign name="plus" size={18} color="#fff" />
+            <Text style={tw`text-white font-bold ml-2`}>Create Assignment</Text>
           </TouchableOpacity>
-
-          <View style={tw`mt-6 `}>
-          <View style={tw`flex flex-row justify-between items-center mb-4`}>
-            <Text style={tw`text-2xl font-bold text-gray-800`}>Popular Categories</Text>
-
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={tw`pb-2`}
-          >
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={`category-chip-${category.id}`}
-                style={[
-                  tw`mr-3 px-4 py-3 rounded-xl flex flex-row items-center shadow-sm`,
-                  { backgroundColor: category.color },
-                  selectedCategory === category.id && tw`border-2 border-white`
-                ]}
-                onPress={() => setSelectedCategory(category.id === selectedCategory ? null : category.id)}
-              >
-                <MaterialIcons name={category.icon} size={18} color="#fff" />
-                <Text style={tw`text-white font-bold ml-2`}>{category.title}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
         </View>
+
+        {/* Categories */}
+        <View style={tw`px-5 mt-6`}>
+          <Text style={tw`text-xl font-bold text-gray-800 mb-4`}>Categories</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {CATEGORIES.map(category => <CategoryChip key={category.id} category={category} />)}
+          </ScrollView>
         </View>
 
         {/* Due Assignments */}
-        <View style={tw`px-5 mt-4`}>
-          <View style={tw`flex flex-row justify-between items-center mb-4`}>
-            <Text style={tw`text-2xl font-bold text-gray-800`}>Due Assignments Status</Text>
-            <TouchableOpacity onPress={() => setShowAllDueAssignments(!showAllDueAssignments)}>
-              <Text style={tw`text-violet-500 font-semibold`}>{showAllDueAssignments ? 'See less' : 'See all'}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {displayedDueAssignments.map((assignment) => (
-            <TouchableOpacity
-              key={assignment.id}
-              style={tw`bg-gray-50 p-4 rounded-xl shadow-lg  mb-3 flex flex-row items-center`}
-              onPress={() => alert(`Open assignment: ${assignment.title}`)}
-            >
-              <View style={tw`mr-3`}>
-                <View style={[tw`w-12 h-12 rounded-xl items-center justify-center`, { backgroundColor: `${getSubjectColor(assignment.subject, subjects)}20` }]}>
-                  <FontAwesome
-                    name={getSubjectIcon(assignment.subject, subjects)}
-                    size={20}
-                    color={getSubjectColor(assignment.subject, subjects)}
-                  />
-                </View>
-              </View>
-
-              <View style={tw`flex-1`}>
-                <Text style={tw`text-gray-800 font-bold mb-1`} >
-                  {assignment.title}
-                </Text>
-                <View style={tw`flex flex-row items-center justify-between mb-2`}>
-                  <Text style={tw`text-gray-500 text-xs`}>{assignment.subject}</Text>
-                  <View style={tw`flex flex-row items-center`}>
-                    <Icon name="calendar" size={10} color="#6B7280" />
-                    <Text style={tw`text-gray-500 text-xs ml-1`}>Due: {assignment.dueDate}</Text>
-                  </View>
-                </View>
-
-                {/* Progress bar */}
-                <View style={tw`bg-gray-200 h-1 rounded-full w-full overflow-hidden`}>
-                  <View
-                    style={[
-                      tw`h-full rounded-full`,
-                      { width: `${assignment.progress}%`, backgroundColor: getPriorityColor(assignment.priority) }
-                    ]}
-                  />
-                </View>
-
-                <View style={tw`flex flex-row justify-between items-center mt-2`}>
-                  <Text style={tw`text-gray-600 text-xs`}>{assignment.progress}% Complete</Text>
-                  {renderPriorityBadge(assignment.priority)}
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-
-
-        {/* Assignment Categories */}
-        <View style={tw`px-5 mt-4 mb-4`}>
-          <Text style={tw`text-2xl font-bold mb-4 text-gray-800`}>Assignment Categories</Text>
-
-          <View style={tw`flex flex-row flex-wrap justify-between`}>
-            {displayedSubjects.map((subject) => (
-              <TouchableOpacity
-                key={`subject-${subject.id}`}
-                style={tw`bg-gray-50 rounded-xl shadow-lg  mb-4 w-[48%] overflow-hidden`}
-                onPress={() => alert(`View ${subject.title} assignments`)}
-              >
-                <View style={tw`p-4`}>
-                  <View style={[tw`w-12 h-12 rounded-lg items-center justify-center mb-3`, { backgroundColor: `${subject.color}20` }]}>
-                    <FontAwesome name={subject.icon} size={20} color={subject.color} />
-                  </View>
-                  <Text style={tw`text-gray-800 font-bold mb-1`}>{subject.title}</Text>
-                  <Text style={tw`text-gray-500 text-xs mb-2`} numberOfLines={1}>
-                    {subject.description}
-                  </Text>
-                  <View style={tw`flex flex-row items-center`}>
-                    <View style={tw`bg-gray-100 px-2 py-1 rounded-full`}>
-                      <Text style={tw`text-gray-700 text-xs font-bold`}>{subject.count} {subject.count === 1 ? 'item' : 'items'}</Text>
-                    </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* See All / Show Less button */}
-          {subjects.length > 4 && (
-            <TouchableOpacity
-              onPress={() => setShowAllSubjects(!showAllSubjects)}
-              style={tw`p-3 bg-gray-100 rounded-xl items-center mt-2 border border-gray-200`}
-            >
-              <Text style={tw`text-gray-700 font-bold`}>
-                {showAllSubjects ? 'Show Less' : 'View All Categories'}
+        <View style={tw`px-5 mt-6`}>
+          <View style={tw`flex-row justify-between items-center mb-4`}>
+            <Text style={tw`text-xl font-bold text-gray-800`}>Recent Assignments</Text>
+            <TouchableOpacity onPress={() => setShowAll(prev => ({ ...prev, assignments: !prev.assignments }))}>
+              <Text style={tw`text-violet-500 font-medium`}>
+                {showAll.assignments ? 'Show Less' : 'View All'}
               </Text>
             </TouchableOpacity>
-          )}
+          </View>
+          {displayedAssignments.map(assignment => <AssignmentCard key={assignment.id} assignment={assignment} />)}
+        </View>
+
+        {/* Assignment Types */}
+        <View style={tw`px-5 mt-6`}>
+          <Text style={tw`text-xl font-bold text-gray-800 mb-4`}>Assignment Types</Text>
+          <View style={tw`flex-row flex-wrap justify-between`}>
+            {displayedTypes.map(type => <TypeCard key={type.id} type={type} />)}
+          </View>
         </View>
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={tw`flex flex-row justify-between bg-white absolute bottom-0 left-0 right-0 shadow-lg rounded-t-3xl py-2`}>
-        <TouchableOpacity style={tw`flex-1 items-center justify-center py-2`} onPress={() => navigation.navigate('UserHomePage')}>
-          <View style={tw`bg-violet-500 p-2 rounded-xl mb-1`}>
-            <AntDesign name="home" size={22} color="#fff" />
-          </View>
-          <Text style={tw`text-xs font-bold text-violet-700`}>Home</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={tw`flex-1 items-center justify-center py-2`} onPress={() => navigation.navigate('CreateAssignment')}>
-          <View style={tw`bg-violet-500 p-2 rounded-xl mb-1`}>
-            <AntDesign name="plus" size={22} color="#fff" />
-          </View>
-          <Text style={tw`text-xs font-bold text-violet-700`}>Create</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={tw`flex-1 items-center justify-center py-2`} onPress = {() => navigation.navigate('MyAssignments')}>
-          <View style={tw`bg-violet-500 p-2 rounded-xl mb-1`}>
-            <Entypo name="clipboard" size={22} color="#fff" />
-          </View>
-          <Text style={tw`text-xs font-bold text-violet-700`}>My Assignments</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={tw`flex-1 items-center justify-center py-2`} onPress={() => navigation.navigate('UserProfile')}>
-          <View style={tw`bg-violet-500 p-2 rounded-xl mb-1`}>
-            <Entypo name="user" size={22} color="#fff" />
-          </View>
-          <Text style={tw`text-xs font-bold text-violet-700`}>Profile</Text>
-        </TouchableOpacity>
+      <View style={tw`absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-2`}>
+        <View style={tw`flex-row justify-around`}>
+          <NavButton icon="home" label="Home" onPress={() => navigation.navigate('UserHomePage')} active />
+          <NavButton icon="plus" label="Create" onPress={() => navigation.navigate('CreateAssignment')} />
+          <NavButton icon="book" label="My Assignments" onPress={() => navigation.navigate('MyAssignments')} />
+          <NavButton icon="user" label="Profile" onPress={() => navigation.navigate('UserProfile')} />
+        </View>
       </View>
     </SafeAreaView>
   );
 };
 
-// Helper functions
-function getSubjectColor(subjectName, subjects) {
-  const subject = subjects.find(s => s.title === subjectName);
-  if (subject) return subject.color;
-
-  // Default colors for subjects not in our predefined list
-  const defaultColors = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#6366F1'];
-  const hash = subjectName.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
-  return defaultColors[hash % defaultColors.length];
-}
-
-function getSubjectIcon(subjectName, subjects) {
-  const subject = subjects.find(s => s.title === subjectName);
-  if (subject) return subject.icon;
-
-  // Default icons
-  const defaultIcons = ['file-text-o', 'folder', 'book', 'edit', 'graduation-cap'];
-  const hash = subjectName.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
-  return defaultIcons[hash % defaultIcons.length];
-}
-
-function getPriorityColor(priority) {
-  switch(priority) {
-    case 'high': return '#EF4444';
-    case 'medium': return '#F59E0B';
-    case 'low': return '#3B82F6';
-    default: return '#8B5CF6';
-  }
-}
-
 const styles = StyleSheet.create({
   headerGradient: {
     backgroundColor: '#8B5CF6',
     shadowColor: '#8B5CF6',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });
 

@@ -11,7 +11,7 @@ export const initSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
     // Handle user joining a room
-    socket.on("joinRoom", (room) => {
+    socket.on("join", (room) => {
       socket.join(room);
       console.log(`User ${socket.id} joined room: ${room}`);
     });

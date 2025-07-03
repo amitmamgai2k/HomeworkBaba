@@ -54,7 +54,7 @@ export const createAssignment = createAsyncThunk(
     try {
       const currentUser = auth.currentUser;
       const idToken = await currentUser.getIdToken();
-      console.log("Creating assignment with data:", assignmentData);
+
 
       // Create FormData for file upload
       const formData = new FormData();
@@ -107,7 +107,7 @@ export const fetchAssignments = createAsyncThunk(
 
       const query = status ? `?status=${status}` : "";
 
-      console.log("Fetching assignments for UID:", uid, "with status:", query);
+
       const response = await axiosInstance.get(`/users/get-assignments/${uid}${query}`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
@@ -203,7 +203,7 @@ const userSlice = createSlice({
       .addCase(fetchAssignments.fulfilled, (state, action) => {
         state.loading = false;
         state.assignments = action.payload;
-        console.log("Assignments fetched successfully:", action.payload);
+
         state.error = null;
       })
       .addCase(fetchAssignments.rejected, (state, action) => {
