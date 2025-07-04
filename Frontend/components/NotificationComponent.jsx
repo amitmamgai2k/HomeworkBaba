@@ -1,6 +1,6 @@
 // NotificationComponent.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, ToastAndroid } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ScrollView, ToastAndroid, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -17,10 +17,16 @@ const NotificationComponent = ({ socket, userId }) => {
 
   useEffect(() => {
     if (socket) {
+      console.log("🔔 NotificationComponent: Setting up socket listeners");
+
+      // Assignment created notifications
       socket.on("assignmentCreated", (data) => {
+        console.log("📝 Assignment created notification:", data);
         const newNotification = {
           id: Date.now(),
+          title: "New Assignment Created",
           message: data.message,
+          type: "assignment_created",
           time: new Date().toLocaleTimeString(),
           read: false
         };
@@ -28,8 +34,27 @@ const NotificationComponent = ({ socket, userId }) => {
         ToastAndroid.show(data.message, ToastAndroid.SHORT);
       });
 
+      // Assignment completed notifications
+      socket.on("assignmentCompleted", (data) => {
+        console.log("🎉 Assignment completed notification:", data);
+        const newNotification = {
+          id: Date.now(),
+          title: "Assignment Completed",
+          message: data.message,
+          type: "assignment_completed",
+          time: new Date().toLocaleTimeString(),
+          read: false,
+          fileUrl: data.fileUrl,
+          assignmentId: data.assignmentId
+        };
+        addNotification(newNotification);
+        ToastAndroid.show("🎉 " + data.message, ToastAndroid.LONG);
+      });
+
       return () => {
+        console.log("🧹 NotificationComponent: Cleaning up socket listeners");
         socket.off("assignmentCreated");
+        socket.off("assignmentCompleted");
       };
     }
   }, [socket]);
@@ -63,6 +88,37 @@ const NotificationComponent = ({ socket, userId }) => {
     setNotifications(updatedNotifications);
     setUnreadCount(prev => prev + 1);
     saveNotifications(updatedNotifications);
+  };
+
+  // Handle notification press
+  const handleNotificationPress = (notification) => {
+    markAsRead(notification.id);
+
+    // If it's a completed assignment with file, open the file
+    if (notification.type === 'assignment_completed' && notification.fileUrl) {
+      console.log("📄 Opening file:", notification.fileUrl);
+      Linking.openURL(notification.fileUrl).catch(err =>
+        console.error('Error opening file:', err)
+      );
+    }
+  };
+
+  // Get notification icon based on type
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'assignment_created': return 'assignment';
+      case 'assignment_completed': return 'check-circle';
+      default: return 'notifications';
+    }
+  };
+
+  // Get notification color based on type
+  const getNotificationColor = (type) => {
+    switch (type) {
+      case 'assignment_created': return '#8B5CF6';
+      case 'assignment_completed': return '#10B981';
+      default: return '#6B7280';
+    }
   };
 
   // Mark notification as read
@@ -113,19 +169,53 @@ const NotificationComponent = ({ socket, userId }) => {
           <ScrollView style={tw`max-h-80`}>
             {notifications.length === 0 ? (
               <View style={tw`p-8 items-center`}>
-                <Text style={tw`text-gray-500`}>No notifications</Text>
+                <MaterialIcons name="notifications-none" size={48} color="#D1D5DB" />
+                <Text style={tw`text-gray-500 mt-2`}>No notifications</Text>
               </View>
             ) : (
               notifications.map((notification) => (
                 <TouchableOpacity
                   key={notification.id}
-                  style={[tw`p-4 border-b border-gray-100`, !notification.read && tw`bg-blue-50`]}
-                  onPress={() => markAsRead(notification.id)}
+                  style={[tw`p-4 border-b border-gray-100 flex-row`, !notification.read && tw`bg-blue-50`]}
+                  onPress={() => handleNotificationPress(notification)}
                 >
-                  <Text style={tw`text-gray-800 mb-1`}>{notification.message}</Text>
-                  <Text style={tw`text-gray-400 text-xs`}>{notification.time}</Text>
+                  <View style={[
+                    tw`w-10 h-10 rounded-full items-center justify-center mr-3`,
+                    { backgroundColor: getNotificationColor(notification.type) + '20' }
+                  ]}>
+                    <MaterialIcons
+                      name={getNotificationIcon(notification.type)}
+                      size={20}
+                      color={getNotificationColor(notification.type)}
+                    />
+                  </View>
+
+                  <View style={tw`flex-1`}>
+                    <Text style={[
+                      tw`font-semibold text-gray-800 mb-1`,
+                      !notification.read && tw`text-violet-800`
+                    ]}>
+                      {notification.title}
+                    </Text>
+                    <Text style={tw`text-gray-600 text-sm mb-1`} numberOfLines={2}>
+                      {notification.message}
+                    </Text>
+                    <Text style={tw`text-gray-400 text-xs`}>
+                      {notification.time}
+                    </Text>
+
+                    {/* Show file download option for completed assignments */}
+                    {notification.type === 'assignment_completed' && notification.fileUrl && (
+                      <View style={tw`mt-2`}>
+                        <Text style={tw`text-green-600 text-xs font-semibold`}>
+                          📎 Tap to download file
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
                   {!notification.read && (
-                    <View style={tw`w-2 h-2 bg-blue-500 rounded-full absolute right-4 top-4`} />
+                    <View style={tw`w-2 h-2 bg-blue-500 rounded-full mt-2`} />
                   )}
                 </TouchableOpacity>
               ))

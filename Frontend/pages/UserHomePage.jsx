@@ -1,5 +1,5 @@
-// UserHomePage.js
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl } from 'react-native';
+// UserHomePage.js - Fixed Version
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl, Alert } from 'react-native';
 import React, { useCallback, useEffect, useState, useContext } from 'react';
 import tw from '../tailwind';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -48,16 +48,73 @@ const UserHomePage = ({ navigation }) => {
 
   // Effects
   useEffect(() => {
-    socket?.emit("join", { userId: user?.uid });
-    socket.on("assignmentCompleted", (data) => {
-  alert(data.message);
-  console.log("Completed file:", data.fileUrl);
-});
+    if (socket && user?.uid) {
+      console.log("🔌 UserHomePage: Connecting socket for user:", user.uid);
+
+      // Join room with user ID
+      socket.emit("join", { userId: user.uid });
+
+      // Listen for join confirmation
+      socket.on("joined", (data) => {
+        console.log("✅ UserHomePage: Successfully joined room:", data);
+      });
+
+      // Listen for server messages
+      socket.on("serverMessage", (data) => {
+        console.log("📨 UserHomePage: Server message:", data);
+      });
+
+
+      return () => {
+        socket.off("joined");
+        socket.off("serverMessage");
+      };
+    }
+
     loadUserData();
     loadAssignments();
-  }, [user?.uid]);
+  }, [user?.uid, socket]);
 
-  // Helper Functions
+
+  useEffect(() => {
+    if (socket) {
+      console.log("🔔 UserHomePage: Setting up assignment completion listener");
+
+      socket.on("assignmentCompleted", (data) => {
+        console.log("🎉 UserHomePage: Assignment completed notification:", data);
+
+        // Show alert for immediate notification
+        Alert.alert(
+          "Assignment Completed! 🎉",
+          data.message,
+          [
+            {
+              text: "View File",
+              onPress: () => {
+                if (data.fileUrl) {
+                  // Handle file opening - you can use Linking.openURL here
+                  console.log("📄 Opening file:", data.fileUrl);
+                  // Linking.openURL(data.fileUrl);
+                }
+              }
+            },
+            { text: "OK" }
+          ]
+        );
+
+
+        loadAssignments();
+      });
+
+
+      return () => {
+        console.log("🧹 UserHomePage: Cleaning up assignment completion listener");
+        socket.off("assignmentCompleted");
+      };
+    }
+  }, [socket]);
+
+
   const loadUserData = async () => {
     try {
       const data = await AsyncStorage.getItem('USER_DATA');
@@ -72,12 +129,14 @@ const UserHomePage = ({ navigation }) => {
     try {
       await Promise.all([
         dispatch(fetchAssignmentStatus(user.uid)).unwrap(),
-        dispatch(fetchAssignments({ uid: user.uid, status: 'overdue' })).unwrap()
+        dispatch(fetchAssignments({ uid: user.uid, status: 'pending' })).unwrap()
       ]);
     } catch (error) {
       console.error('Error loading assignments:', error);
     }
   };
+
+
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

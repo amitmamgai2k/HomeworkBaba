@@ -45,6 +45,9 @@ const assignmentSchema = new mongoose.Schema(
     fileUrl: {
       type: String,
     },
+    responseFile:{
+      type: String,
+    },
     status: {
       type: String,
       enum: ["pending", "completed", "overdue"],

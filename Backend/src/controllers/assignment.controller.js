@@ -4,7 +4,7 @@ import { Assignment } from "../models/assignment.model.js";
 import { User } from "../models/user.model.js";
 import { validationResult } from "express-validator";
 import { sendMessageToSocketId } from "../../socket.js";
-import { getIO } from "../../socket.js";
+import { getIO,sendMessageToUser } from "../../socket.js";
 export const createAssignment = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -240,27 +240,47 @@ export const deleteAssignment = asyncHandler(async (req, res) => {
   }
 });
 export const markAssignmentCompleted = asyncHandler(async (req, res) => {
-  const { assignmentId } = req.params;
+  const { assignmentId } = req.params; // Fixed typo: assignmenId -> assignmentId
   const { fileUrl } = req.body;
 
+  console.log("Marking assignment completed:", assignmentId);
+
   const assignment = await Assignment.findById(assignmentId);
-  if (!assignment  || assignment.status == "completed") {
-    return res.status(404).json({ message: "Assignment not found" });
+  if (!assignment || assignment.status === "completed") {
+    return res.status(404).json({ message: "Assignment not found or already completed" });
   }
 
+  // Update assignment
   assignment.status = "completed";
   assignment.responseFile = fileUrl;
   await assignment.save();
 
-  const io = getIO();
-  io.to(assignment.uid).emit("assignmentCompleted", {
-    message: " Your assignment has been reviewed!",
+  console.log("Assignment updated, sending notification to user:", assignment.uid);
+
+  // Send notification to user
+  const notificationData = {
+    id: Date.now(),
+    title: "Assignment Completed",
+    message: "🎉 Your assignment has been completed and is ready for download!",
+    type: "assignment_completed",
     fileUrl: fileUrl,
     assignmentId: assignment._id,
-  });
+    timestamp: new Date(),
+    read: false
+  };
+
+  // Try to send notification
+  const sent = sendMessageToUser(assignment.uid, "assignmentCompleted", notificationData);
+
+  if (sent) {
+    console.log(`Notification sent to user ${assignment.uid}`);
+  } else {
+    console.log(`User ${assignment.uid} is offline, you may want to store this notification`);
+  }
 
   res.status(200).json({
     message: "Assignment marked complete and user notified",
     assignment,
+    notificationSent: sent
   });
 });
