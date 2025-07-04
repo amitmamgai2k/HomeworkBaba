@@ -1,12 +1,15 @@
-import { Image, Text, View, ScrollView } from 'react-native'
+import { Image, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { signOut } from 'firebase/auth'
+import { auth } from '../firebase.config.js'
 import tw from '../tailwind'
 import Icon from 'react-native-vector-icons/AntDesign'
 import School from 'react-native-vector-icons/Ionicons'
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 
-const UserProfile = () => {
+const UserProfile = ({ navigation }) => { // Add navigation prop
   const [userData, setUser] = useState(null);
 
   useEffect(() => {
@@ -20,6 +23,38 @@ const UserProfile = () => {
     };
     getUserData();
   }, []);
+
+  // Simple Firebase logout function
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+
+              await signOut(auth);
+              navigation.navigate('StartPage'); // Navigate to Login screen after logout
+
+
+              await AsyncStorage.clear();
+
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const ProfileItem = ({ icon, label, value }) => (
     <View style={tw`flex-row items-center py-3`}>
@@ -38,7 +73,15 @@ const UserProfile = () => {
       <ScrollView showsVerticalScrollIndicator={false} style={tw`flex-1`}>
         {/* Header */}
         <View style={tw`bg-violet-600 px-6 pt-4 pb-20 rounded-b-3xl`}>
-          <Text style={tw`text-2xl font-bold text-white text-center`}>Profile</Text>
+          <View style={tw`flex-row justify-between items-center`}>
+            <Text style={tw`text-2xl font-bold text-white flex-1 text-center`}>Profile</Text>
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={tw`w-10 h-10 bg-white/20 rounded-full justify-center items-center`}
+            >
+              <MaterialIcons name="logout" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={tw`px-6 -mt-16`}>
@@ -62,11 +105,28 @@ const UserProfile = () => {
           </View>
 
           {/* Education */}
-          <View style={tw`bg-white rounded-2xl shadow-sm p-6 mb-8`}>
+          <View style={tw`bg-white rounded-2xl shadow-sm p-6 mb-4`}>
             <Text style={tw`text-lg font-bold text-gray-800 mb-4`}>Education</Text>
             <ProfileItem icon={<School name="school" size={20} color="#8B5CF6" />} label="School" value={userData?.schoolName} />
             <ProfileItem icon={<School name="git-branch-outline" size={20} color="#8B5CF6" />} label="Major" value={userData?.major} />
             <ProfileItem icon={<School name="time" size={20} color="#8B5CF6" />} label="Class Year" value={userData?.classYear} />
+          </View>
+
+          {/* Logout Button */}
+          <View style={tw`bg-white rounded-2xl shadow-sm p-6 mb-8`}>
+            <Text style={tw`text-lg font-bold text-gray-800 mb-4`}>Account Actions</Text>
+
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={tw`bg-red-500 py-4 rounded-xl flex-row justify-center items-center`}
+            >
+              <MaterialIcons name="logout" size={20} color="#fff" />
+              <Text style={tw`text-white font-bold ml-2 text-base`}>Logout</Text>
+            </TouchableOpacity>
+
+            <Text style={tw`text-gray-500 text-xs text-center mt-2`}>
+              You will be signed out of your account
+            </Text>
           </View>
         </View>
       </ScrollView>

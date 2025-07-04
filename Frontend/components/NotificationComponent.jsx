@@ -1,5 +1,5 @@
 // NotificationComponent.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, ToastAndroid, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -15,9 +15,15 @@ const NotificationComponent = ({ socket, userId }) => {
     loadNotifications();
   }, [userId]);
 
+  // Debug: Log notifications changes
+  useEffect(() => {
+    console.log("📊 Notifications updated:", notifications.length, "notifications");
+    console.log("📋 Notification IDs:", notifications.map(n => n.id));
+  }, [notifications]);
+
   useEffect(() => {
     if (socket) {
-      console.log("🔔 NotificationComponent: Setting up socket listeners");
+
 
       // Assignment created notifications
       socket.on("assignmentCreated", (data) => {
@@ -31,7 +37,7 @@ const NotificationComponent = ({ socket, userId }) => {
           read: false
         };
         addNotification(newNotification);
-        ToastAndroid.show(data.message, ToastAndroid.SHORT);
+
       });
 
       // Assignment completed notifications
@@ -48,7 +54,7 @@ const NotificationComponent = ({ socket, userId }) => {
           assignmentId: data.assignmentId
         };
         addNotification(newNotification);
-        ToastAndroid.show("🎉 " + data.message, ToastAndroid.LONG);
+
       });
 
       return () => {
@@ -57,7 +63,7 @@ const NotificationComponent = ({ socket, userId }) => {
         socket.off("assignmentCompleted");
       };
     }
-  }, [socket]);
+  }, [socket, addNotification]); // Added addNotification to dependencies
 
   // Load notifications from AsyncStorage
   const loadNotifications = async () => {
@@ -73,22 +79,28 @@ const NotificationComponent = ({ socket, userId }) => {
     }
   };
 
-  // Save notifications to AsyncStorage
-  const saveNotifications = async (notifications) => {
+  // Save notifications to AsyncStorage - FIXED: Use useCallback
+  const saveNotifications = useCallback(async (notifications) => {
     try {
       await AsyncStorage.setItem(`notifications_${userId}`, JSON.stringify(notifications));
+      console.log("💾 Saved", notifications.length, "notifications to storage");
     } catch (error) {
       console.error('Error saving notifications:', error);
     }
-  };
+  }, [userId]);
 
-  // Add new notification
-  const addNotification = (notification) => {
-    const updatedNotifications = [notification, ...notifications].slice(0, 20);
-    setNotifications(updatedNotifications);
+  // Add new notification - FIXED: Use useCallback to prevent stale closure
+  const addNotification = useCallback((notification) => {
+    console.log("➕ Adding notification:", notification.title);
+    setNotifications(prev => {
+      console.log("📊 Previous notifications count:", prev.length);
+      const updatedNotifications = [notification, ...prev].slice(0, 20);
+      console.log("📊 New notifications count:", updatedNotifications.length);
+      saveNotifications(updatedNotifications);
+      return updatedNotifications;
+    });
     setUnreadCount(prev => prev + 1);
-    saveNotifications(updatedNotifications);
-  };
+  }, [saveNotifications]); // Include saveNotifications in dependencies
 
   // Handle notification press
   const handleNotificationPress = (notification) => {
@@ -131,12 +143,12 @@ const NotificationComponent = ({ socket, userId }) => {
     saveNotifications(updatedNotifications);
   };
 
-  // Clear all notifications
-  const clearAllNotifications = () => {
+  // Clear all notifications - FIXED: Use useCallback
+  const clearAllNotifications = useCallback(() => {
     setNotifications([]);
     setUnreadCount(0);
     saveNotifications([]);
-  };
+  }, [saveNotifications]);
 
   // Notification Modal
   const NotificationModal = () => (

@@ -1,54 +1,90 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import {BASE_URL} from '@env';
+import { BASE_URL } from '@env';
 
 export const SocketContext = createContext();
 
 const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
+    const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
+        console.log('🔌 Initializing socket connection to:', BASE_URL);
+
         const newSocket = io(BASE_URL, {
             autoConnect: true,
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionAttempts: 5,
-            transports: ['websocket'] // Force WebSocket transport
+            timeout: 10000, // 10 second timeout
+
+            transports: ['websocket', 'polling'], // Allow fallback to polling
+            forceNew: true, // Force new connection
+
+            upgrade: true,
+            rememberUpgrade: false
         });
 
-        // Basic connection logic
+        // Connection events with better logging
         newSocket.on('connect', () => {
-            console.log('Connected to server with ID:', newSocket.id);
+            console.log('✅ Connected to server with ID:', newSocket.id);
+            setIsConnected(true);
         });
 
-        newSocket.on('disconnect', () => {
-            console.log('Disconnected from server');
+        newSocket.on('disconnect', (reason) => {
+            console.log('❌ Disconnected from server. Reason:', reason);
+            setIsConnected(false);
         });
 
         newSocket.on('connect_error', (error) => {
-            console.error('Connection error:', error);
+            console.error('💥 Connection error:', error.message);
+            setIsConnected(false);
+        });
+
+        newSocket.on('reconnect', (attemptNumber) => {
+            console.log('🔄 Reconnected after', attemptNumber, 'attempts');
+            setIsConnected(true);
+        });
+
+        newSocket.on('reconnect_attempt', (attemptNumber) => {
+            console.log('🔄 Reconnection attempt', attemptNumber);
+        });
+
+        newSocket.on('reconnect_error', (error) => {
+            console.error('💥 Reconnection error:', error.message);
+        });
+
+        newSocket.on('reconnect_failed', () => {
+            console.error('💥 Reconnection failed after all attempts');
+            setIsConnected(false);
         });
 
         setSocket(newSocket);
 
         // Cleanup function
         return () => {
+            console.log('🧹 Cleaning up socket connection');
             if (newSocket) {
-                console.log('Cleaning up socket connection');
                 newSocket.disconnect();
             }
         };
-    }, []); // Empty dependency array - only run once on mount
+    }, []);
 
-    if (!socket) {
-        return null; // or a loading spinner
-    }
 
     return (
-        <SocketContext.Provider value={{ socket }}>
+        <SocketContext.Provider value={{ socket, isConnected }}>
             {children}
         </SocketContext.Provider>
     );
 };
 
 export default SocketProvider;
+
+
+export const useSocket = () => {
+    const context = React.useContext(SocketContext);
+    if (!context) {
+        throw new Error('useSocket must be used within a SocketProvider');
+    }
+    return context;
+};

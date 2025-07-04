@@ -76,43 +76,7 @@ const UserHomePage = ({ navigation }) => {
   }, [user?.uid, socket]);
 
 
-  useEffect(() => {
-    if (socket) {
-      console.log("🔔 UserHomePage: Setting up assignment completion listener");
 
-      socket.on("assignmentCompleted", (data) => {
-        console.log("🎉 UserHomePage: Assignment completed notification:", data);
-
-        // Show alert for immediate notification
-        Alert.alert(
-          "Assignment Completed! 🎉",
-          data.message,
-          [
-            {
-              text: "View File",
-              onPress: () => {
-                if (data.fileUrl) {
-                  // Handle file opening - you can use Linking.openURL here
-                  console.log("📄 Opening file:", data.fileUrl);
-                  // Linking.openURL(data.fileUrl);
-                }
-              }
-            },
-            { text: "OK" }
-          ]
-        );
-
-
-        loadAssignments();
-      });
-
-
-      return () => {
-        console.log("🧹 UserHomePage: Cleaning up assignment completion listener");
-        socket.off("assignmentCompleted");
-      };
-    }
-  }, [socket]);
 
 
   const loadUserData = async () => {
@@ -136,6 +100,7 @@ const UserHomePage = ({ navigation }) => {
     }
   };
 
+console.log(assignments);
 
 
   const onRefresh = useCallback(() => {

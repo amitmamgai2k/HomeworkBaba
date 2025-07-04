@@ -30,7 +30,7 @@ const uploadOnCloudinary = async (localFilePath) => {
 
     const response = await cloudinary.uploader.upload(localFilePath, {
       folder: 'HomeWorkBaba',
-      resource_type: 'auto',
+      resource_type: 'raw',
       public_id: publicId,
       use_filename: true,
       unique_filename: false
@@ -41,13 +41,10 @@ const uploadOnCloudinary = async (localFilePath) => {
     await fs.unlink(localFilePath);
     console.log('🧹 Local file deleted:', localFilePath);
 
-    const downloadUrl = response.secure_url
-  .replace('/image/upload/', '/raw/upload/')
-  .replace('/upload/', '/upload/fl_attachment/');
 
     return {
       previewUrl: response.secure_url,
-      downloadUrl,
+      downloadUrl: response.secure_url,
       publicId: response.public_id,
       resourceType: response.resource_type,
       format: response.format,
@@ -68,7 +65,5 @@ const uploadOnCloudinary = async (localFilePath) => {
     return null;
   }
 };
-
-
 
 export default uploadOnCloudinary;

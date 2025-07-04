@@ -108,12 +108,12 @@ const MyAssignment = () => {
   const AssignmentCard = ({ assignment }) => (
     <View style={tw`bg-white rounded-xl p-5 mb-4 shadow-sm border border-gray-100`}>
       {/* Header */}
-      <View style={tw`flex-row justify-between items-start mb-3`}>
+      <View style={tw`flex-row justify-between items-start mb-1`}>
         <View style={tw`flex-1 mr-3`}>
           <Text style={tw`text-xs text-gray-500 font-medium mb-1`}>ASSIGNMENT TITLE</Text>
           <Text style={tw`text-lg font-bold text-gray-800 mb-1`}>{assignment.assignmentTitle}</Text>
-          <View style={tw`flex-row items-center`}>
-            <Text style={tw`text-xs text-gray-500 font-medium mr-2`}>SUBJECT:</Text>
+          <View style={tw`flex-row items-center gap-2` }>
+            <Text style={tw`text-xs text-gray-500 font-medium `}>SUBJECT</Text>
             <Text style={tw`text-violet-600 font-medium`}>{assignment.subjectName}</Text>
           </View>
         </View>
@@ -126,26 +126,33 @@ const MyAssignment = () => {
       </View>
 
       {/* Status & Priority */}
-      <View style={tw`flex-row justify-between items-center mb-4`}>
-        <View>
-          <Text style={tw`text-xs text-gray-500 font-medium mb-1`}>STATUS</Text>
-          <StatusBadge status={assignment.status} />
-        </View>
-        <View>
-          <Text style={tw`text-xs text-gray-500 font-medium mb-1`}>PRIORITY</Text>
-          <PriorityBadge priority={assignment.priority} />
-        </View>
+      <View style={tw`flex-row justify-between items-center mb-4 border-b border-gray-200 pb-3 `}>
+      <View style={tw`flex-row items-center mr-4 gap-2 `}>
+  <Text style={tw`text-xs text-gray-500 font-medium mb-1 mt-1`}>STATUS</Text>
+  <StatusBadge status={assignment.status} />
+</View>
+
+<View style={tw`flex-row items-center gap-2 `}>
+  <Text style={tw`text-xs text-gray-500 font-medium mb-1 mt-1`}>PRIORITY</Text>
+  <PriorityBadge priority={assignment.priority} />
+</View>
+
       </View>
 
       {/* Info Grid */}
       <View style={tw`mb-4 space-y-2`}>
         <View style={tw`flex-row justify-between`}>
-          <View style={tw`flex-1 mr-2`}>
-            <Text style={tw`text-xs text-gray-500 font-medium`}>STUDENT NAME</Text>
-            <Text style={tw`text-gray-800 font-medium`}>{assignment.fullName}</Text>
-          </View>
-          <View>
-            <Text style={tw`text-xs text-gray-500 font-medium`}>ROLL NUMBER</Text>
+
+            <View style={tw`flex-row items-center mb-1 align-items-center gap-2` } >
+              <Icon name="person" size={26} color="#6B7280" />
+              <Text style={tw`text-gray-800 text-lg font-semibold`}>{assignment.fullName}</Text>
+            </View>
+
+
+
+          <View style={tw`flex-row items-center mb-1 align-items-center gap-2`}>
+             <Icon name="badge" size={26} color="#6B7280" />
+
             <Text style={tw`text-gray-800 font-medium`}>{assignment.rollNumber}</Text>
           </View>
         </View>
@@ -177,13 +184,26 @@ const MyAssignment = () => {
             <Text style={tw`text-xs text-gray-500 font-medium mb-2`}>ATTACHMENT</Text>
             <TouchableOpacity
               onPress={() => handleFilePress(assignment.fileUrl)}
-              style={tw`flex-row items-center bg-violet-100 px-4 py-3 rounded-lg`}
+              style={tw`flex-row items-center justify-center bg-violet-100 px-4 py-3 rounded-lg`}
             >
               <AntDesign name="paperclip" size={16} color="#8B5CF6" />
               <Text style={tw`text-violet-700 font-medium ml-2`}>View Attached File</Text>
             </TouchableOpacity>
           </View>
         )}
+        {assignment.fileUrl && assignment.status === 'completed' && (
+          <View style={tw`mb-3`}>
+            <Text style={tw`text-xs text-gray-500 font-medium mb-2`}>Download Your Completed Assignment</Text>
+            <TouchableOpacity
+              onPress={() => handleFilePress(assignment.responseFile)}
+              style={tw`flex-row items-center justify-center  bg-violet-300 px-4 py-3 rounded-lg`}
+            >
+              <AntDesign name="paperclip" size={16} color="#8B5CF6" />
+              <Text style={tw`text-violet-800 font-medium ml-2 `}>Download Assignment</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
 
         <View style={tw`flex-row justify-between items-center`}>
           <View>
