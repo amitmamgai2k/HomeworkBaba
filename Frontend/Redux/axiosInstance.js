@@ -1,10 +1,10 @@
 // axiosInstance.js
 import axios from 'axios';
-import { BASE_URL } from '@env';
+import { BACKEND_URL } from '@env';
 
 // Create Axios instance
 const axiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: BACKEND_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

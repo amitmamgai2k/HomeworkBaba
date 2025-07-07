@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, Linking, Alert, TextInput } from 'react-native';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from '../tailwind';
@@ -10,6 +10,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 
 const MyAssignment = () => {
   const { user } = useAuth();
+  const [searchItem, setSearchItem] = useState('');
   const assignments = useSelector((state) => state.user?.assignments || []);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
@@ -53,6 +54,12 @@ const MyAssignment = () => {
       month: 'short', day: 'numeric', year: 'numeric'
     });
   };
+  const filteredAssignments = assignments.filter((assignment) =>
+    assignment.assignmentTitle.toLowerCase().includes(searchItem.toLowerCase()) ||
+    assignment.subjectName.toLowerCase().includes(searchItem.toLowerCase()) ||
+    assignment.fullName.toLowerCase().includes(searchItem.toLowerCase())
+  );
+
 
   const handleFilePress = (fileUrl) => {
     if (fileUrl) {
@@ -237,11 +244,22 @@ const MyAssignment = () => {
       <View style={tw`bg-violet-600 px-6 pt-4 pb-6 rounded-b-3xl`}>
         <Text style={tw`text-2xl font-bold text-white text-center`}>My Assignments</Text>
         <Text style={tw`text-violet-200 text-center mt-1`}>{assignments.length} assignments</Text>
+        <TextInput
+          placeholder="Search assignments..."
+          style={tw`bg-white rounded-lg p-2 mt-2`}
+
+          type="text"
+
+          placeholderTextColor="#9CA3AF"
+          onChangeText={(text) => setSearchItem(text)}
+
+
+        />
       </View>
 
       <ScrollView style={tw`flex-1 px-4 -mt-2`} showsVerticalScrollIndicator={false}>
-        {assignments.length > 0 ? (
-          assignments.map((assignment, index) => (
+        {filteredAssignments.length > 0 ? (
+          filteredAssignments.map((assignment, index) => (
             <AssignmentCard key={assignment._id || index} assignment={assignment} />
           ))
         ) : (

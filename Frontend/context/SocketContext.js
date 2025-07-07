@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import { BASE_URL } from '@env';
+import { BACKEND_URL } from '@env';
 
 export const SocketContext = createContext();
 
@@ -9,9 +9,9 @@ const SocketProvider = ({ children }) => {
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        console.log('🔌 Initializing socket connection to:', BASE_URL);
+        console.log('🔌 Initializing socket connection to:', BACKEND_URL);
 
-        const newSocket = io(BASE_URL, {
+        const newSocket = io(BACKEND_URL, {
             autoConnect: true,
             reconnection: true,
             reconnectionDelay: 1000,

@@ -1,10 +1,10 @@
-// socket.js - Fixed Socket File
+
 import { Server } from "socket.io";
 
 let io;
 // Store user socket mappings
-const userSockets = new Map(); // userId -> socketId
-const socketUsers = new Map(); // socketId -> userId
+const userSockets = new Map();
+const socketUsers = new Map();
 
 export const initSocket = (server) => {
   io = new Server(server, {
